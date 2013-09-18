@@ -3,7 +3,6 @@ import re
 import log
 import webutil
 import json
-from urllib.parse import urljoin
 
 _logger = log.getChild('bingwallpaper')
 
@@ -16,14 +15,15 @@ def _property_need_loading(f):
 class BingWallpaperPage:
     BASE_URL='http://www.bing.com'
     IMAGE_API='/HPImageArchive.aspx?format=js&idx={idx}&n={n}'
-    def __init__(self, idx, n=1, base=BASE_URL, api=IMAGE_API):
-        self.update(idx, n, base, api)
+    def __init__(self, idx, n=1, base=BASE_URL, api=IMAGE_API, filter_wp=True):
+        self.update(idx, n, base, api, filter_wp)
 
-    def update(self, idx, n, base, api):
+    def update(self, idx, n, base, api, filter_wp):
         self.base = base
         self.api = api
+        self.filter_wp = filter_wp
         self.reset()
-        self.url = urljoin(self.base, self.api.format(idx=idx, n=n))
+        self.url = webutil.urljoin(self.base, self.api.format(idx=idx, n=n))
 
     def reset(self):
         self.__loaded = False
@@ -38,15 +38,18 @@ class BingWallpaperPage:
             return False
         
         _logger.debug(self.content)
-        self.__images = list(filter(lambda i:i['wp'], self.content['images']))
 
+        if self.filter_wp:
+            self.__images = list(filter(lambda i:i['wp'], self.content['images']))
+        else:
+            self.__images = self.content['images']
         self._update_img_link()
 
         return True
 
     def _update_img_link(self):
         for i in self.__images:
-            i['url'] = urljoin(self.base, i['url'])
+            i['url'] = webutil.urljoin(self.base, i['url'])
 
     def load(self):
         self.reset()
@@ -54,9 +57,8 @@ class BingWallpaperPage:
         rawfile = webutil.loadpage(self.url)
         
         if rawfile:
-            _logger.info('%d bytes loaded', len(self.content))
-            self.__loaded = True
-            self._parse(rawfile)
+            _logger.info('%d bytes loaded', len(rawfile))
+            self.__loaded = self._parse(rawfile)
         else:
             _logger.error('can\'t download photo page')
 
