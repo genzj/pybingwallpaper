@@ -38,9 +38,17 @@ LicenseData LICENSE.txt
   !define MUI_ABORTWARNING
 
 ;--------------------------------
+;Language Selection Dialog Settings
+
+  ;Remember the installer language
+  !define MUI_LANGDLL_REGISTRY_ROOT "HKCU" 
+  !define MUI_LANGDLL_REGISTRY_KEY "Software\Genzj" 
+  !define MUI_LANGDLL_REGISTRY_VALUENAME "Installer Language"
+
+;--------------------------------
 ;Pages
 
-  !insertmacro MUI_PAGE_LICENSE "${NSISDIR}\Docs\Modern UI\License.txt"
+  !insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
   !insertmacro MUI_PAGE_COMPONENTS
   !insertmacro MUI_PAGE_DIRECTORY
   !insertmacro MUI_PAGE_INSTFILES
@@ -52,6 +60,17 @@ LicenseData LICENSE.txt
 ;Languages
  
   !insertmacro MUI_LANGUAGE "English"
+  !insertmacro MUI_LANGUAGE "SimpChinese"
+
+;--------------------------------
+;Reserve Files
+  
+  ;If you are using solid compression, files that are required before
+  ;the actual installation should be stored first in the data block,
+  ;because this will make your installer start faster.
+  
+  !insertmacro MUI_RESERVEFILE_LANGDLL
+
 
 ;--------------------------------
 Function upgrade
@@ -77,13 +96,14 @@ FunctionEnd
 
 Function .onInit
   Call upgrade
+  !insertmacro MUI_LANGDLL_DISPLAY
 FunctionEnd
 
 
 ;--------------------------------
 
 ; The stuff to install
-Section "!PyBingWallpaper Main Programs"
+Section "!PyBingWallpaper Main Programs" SecMain
 
   SectionIn RO
   
@@ -95,8 +115,6 @@ Section "!PyBingWallpaper Main Programs"
   File /x *.pyc /x __pycache__ "*"
   !cd ../..
   File "res\bingwallpaper.ico"
-
-
   
   ; Write the installation path into the registry
   WriteRegStr HKLM Software\Genzj\${PROGRAM_NAME} "Install_Dir" "$INSTDIR"
@@ -111,7 +129,7 @@ Section "!PyBingWallpaper Main Programs"
 SectionEnd
 
 
-Section "Start Menu Shortcuts"
+Section "Start Menu Shortcuts" SecStartMenu
   CreateDirectory "$SMPROGRAMS\${PROGRAM_NAME}"
   CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
   CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME}.lnk" "$INSTDIR\BingWallpaper.exe" "--redownload" "$INSTDIR\bingwallpaper.ico" 0
@@ -120,9 +138,29 @@ Section "Start Menu Shortcuts"
 SectionEnd
 
 ; Create auto startup
-Section "Run at Windows Startup"
+Section "Run at Windows Startup" SecStartup
   CreateShortCut "$SMSTARTUP\${PROGRAM_NAME}.lnk" "$INSTDIR\BingWallpaper.exe" "" "$INSTDIR\bingwallpaper.ico" 0
 SectionEnd
+
+;--------------------------------
+;Descriptions
+
+  ;USE A LANGUAGE STRING IF YOU WANT YOUR DESCRIPTIONS TO BE LANGAUGE SPECIFIC
+  LangString DESC_SecMain_Eng ${LANG_ENGLISH} "Main program files of ${PROGRAM_NAME}."
+  LangString DESC_SecStartMenu_Eng ${LANG_ENGLISH} "Create Start Menu shortcuts for ${PROGRAM_NAME}"
+  LangString DESC_SecStartup_Eng ${LANG_ENGLISH} "Auto run ${PROGRAM_NAME} at Windows startup (network connection at startup is required)"
+  
+  LangString DESC_SecMain_Eng ${LANG_SimpChinese} "${PROGRAM_NAME}主程序文件"
+  LangString DESC_SecStartMenu_Eng ${LANG_SimpChinese} "在开始菜单创建${PROGRAM_NAME}快捷方式"
+  LangString DESC_SecStartup_Eng ${LANG_SimpChinese} "启动Windows时自动运行${PROGRAM_NAME}（启动时需要访问网络）"
+
+  ;Assign descriptions to sections
+  !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecMain} $(DESC_SecMain_Eng)
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecStartMenu} $(DESC_SecStartMenu_Eng)
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecStartup} $(DESC_SecStartup_Eng)
+  !insertmacro MUI_FUNCTION_DESCRIPTION_END
+
 
 ;--------------------------------
 
@@ -133,6 +171,7 @@ Section "Uninstall"
   ; Remove registry keys
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PROGRAM_NAME}"
   DeleteRegKey HKLM "Software\Genzj\${PROGRAM_NAME}"
+  DeleteRegKey /ifempty HKLM "Software\Genzj"
 
   ; Remove files and uninstaller
   Delete "$INSTDIR\*.*"
