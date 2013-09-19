@@ -30,8 +30,7 @@ InstallDirRegKey HKLM "Software\Genzj\${PROGRAM_NAME} "Install_Dir"
 RequestExecutionLevel admin
 
 ; My license
-LicenseData LICENSE.txt
-
+LicenseData $(license)
 ;--------------------------------
 ;Interface Settings
 
@@ -48,7 +47,7 @@ LicenseData LICENSE.txt
 ;--------------------------------
 ;Pages
 
-  !insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
+  !insertmacro MUI_PAGE_LICENSE $(license)
   !insertmacro MUI_PAGE_COMPONENTS
   !insertmacro MUI_PAGE_DIRECTORY
   !insertmacro MUI_PAGE_INSTFILES
@@ -61,6 +60,10 @@ LicenseData LICENSE.txt
  
   !insertmacro MUI_LANGUAGE "English"
   !insertmacro MUI_LANGUAGE "SimpChinese"
+
+
+LicenseLangString license ${LANG_ENGLISH} LICENSE.txt
+LicenseLangString license ${LANG_SimpChinese} LICENSE-zhcn.txt
 
 ;--------------------------------
 ;Reserve Files
