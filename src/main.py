@@ -11,7 +11,7 @@ import record
 import setter
 
 NAME = 'pybingwallpaper'
-REV  = '1.0.0'
+REV  = '1.1.0'
 LINK = 'https://github.com/genzj/pybingwallpaper'
 HISTORY_FILE = pathjoin(expanduser('~'), 'bing-wallpaper-history.json')
 

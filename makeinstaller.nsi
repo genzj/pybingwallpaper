@@ -9,22 +9,29 @@
 
 ;Include Modern UI
 
-  !include "MUI2.nsh"
+!include "MUI2.nsh"
 
+; Section define/macro header file
+; See this header file for more info
+
+!include "Sections.nsh"
+
+;--------------------------------
 
 !define PROGRAM_NAME PyBingWallpaper
+
 ; The name of the installer
 Name ${PROGRAM_NAME}
 
 ; The file to write
-OutFile "pybingwp-1-0-0.exe"
+OutFile "pybingwp-1-1-0.exe"
 
 ; The default installation directory
 InstallDir $PROGRAMFILES\Genzj\${PROGRAM_NAME}
 
 ; Registry key to check for directory (so if you install again, it will 
 ; overwrite the old one automatically)
-InstallDirRegKey HKLM "Software\Genzj\${PROGRAM_NAME} "Install_Dir"
+InstallDirRegKey HKLM "Software\Genzj\${PROGRAM_NAME}" "Install_Dir"
 
 ; Request application privileges for Windows Vista
 RequestExecutionLevel admin
@@ -40,9 +47,14 @@ LicenseData $(license)
 ;Language Selection Dialog Settings
 
   ;Remember the installer language
-  !define MUI_LANGDLL_REGISTRY_ROOT "HKCU" 
-  !define MUI_LANGDLL_REGISTRY_KEY "Software\Genzj" 
-  !define MUI_LANGDLL_REGISTRY_VALUENAME "Installer Language"
+  ;!define MUI_LANGDLL_REGISTRY_ROOT "HKCU" 
+  ;!define MUI_LANGDLL_REGISTRY_KEY "Software\Genzj" 
+  ;!define MUI_LANGDLL_REGISTRY_VALUENAME "Installer Language"
+
+;--------------------------------
+;Variables
+Var COUNTRY_CODE
+Var COUNTRY_CHOSEN
 
 ;--------------------------------
 ;Pages
@@ -76,37 +88,9 @@ LicenseLangString license ${LANG_SimpChinese} LICENSE-zhcn.txt
 
 
 ;--------------------------------
-Function upgrade
-  Push $R0
-; Uninstall old version before install a new one
-  ReadRegStr $R0 HKLM \  
-        "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PROGRAM_NAME}" \
-        "UninstallString"
-  StrCmp $R0 "" done
-  MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
-          "${PROGRAM_NAME} is already installed. $\n$\nClick 'OK' to remove the \
-          previous version or 'Cancel' to cancel this upgrade." \
-          IDOK uninst  
-  Abort
-
-uninst:  
-  ReadRegStr $R0 HKLM "Software\Genzj\${PROGRAM_NAME}" "Install_Dir"
-  ClearErrors
-  Exec $R0\uninstall.exe 
-done:
-  Pop $R0
-FunctionEnd
-
-Function .onInit
-  Call upgrade
-  !insertmacro MUI_LANGDLL_DISPLAY
-FunctionEnd
-
-
-;--------------------------------
 
 ; The stuff to install
-Section "!PyBingWallpaper Main Programs" SecMain
+Section $(NAME_SecMain) SecMain
 
   SectionIn RO
   
@@ -128,40 +112,78 @@ Section "!PyBingWallpaper Main Programs" SecMain
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PROGRAM_NAME}" "NoModify" 1
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PROGRAM_NAME}" "NoRepair" 1
   WriteUninstaller "uninstall.exe"
-  
 SectionEnd
 
+SectionGroup $(NAME_SecGrCountry) SecGrCountry
+  Section /o "China" country_cn
+    StrCpy $COUNTRY_CODE "cn"
+  SectionEnd
+  Section /o "Japan" country_jp
+    StrCpy $COUNTRY_CODE "jp"
+  SectionEnd
+  Section "USA" country_us
+    StrCpy $COUNTRY_CODE "us"
+  SectionEnd
+  Section /o "United Kingdom" country_uk
+    StrCpy $COUNTRY_CODE "uk"
+  SectionEnd
+SectionGroupEnd
 
-Section "Start Menu Shortcuts" SecStartMenu
+Section $(NAME_SecStartMenu) SecStartMenu
   CreateDirectory "$SMPROGRAMS\${PROGRAM_NAME}"
   CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
-  CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME}.lnk" "$INSTDIR\BingWallpaper.exe" "--redownload" "$INSTDIR\bingwallpaper.ico" 0
-  CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME} Commandline Mode.lnk" "cmd" '/k "$INSTDIR\BingWallpaper-cli.exe" --redownload' \
+  CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME}.lnk" "$INSTDIR\BingWallpaper.exe" "--redownload -c $COUNTRY_CODE" "$INSTDIR\bingwallpaper.ico" 0
+  CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME} Commandline Mode.lnk" "cmd" '/k "$INSTDIR\BingWallpaper-cli.exe" --redownload -c $COUNTRY_CODE' \
                  "$INSTDIR\bingwallpaper.ico" 0
 SectionEnd
 
 ; Create auto startup
-Section "Run at Windows Startup" SecStartup
-  CreateShortCut "$SMSTARTUP\${PROGRAM_NAME}.lnk" "$INSTDIR\BingWallpaper.exe" "" "$INSTDIR\bingwallpaper.ico" 0
+Section $(NAME_SecStartup) SecStartup
+  CreateShortCut "$SMSTARTUP\${PROGRAM_NAME}.lnk" "$INSTDIR\BingWallpaper.exe" "-c $COUNTRY_CODE" "$INSTDIR\bingwallpaper.ico" 0
+SectionEnd
+
+; Run it immediately
+Section $(NAME_SecRunit) SecRunit
+  Exec '"$INSTDIR\BingWallpaper.exe" -f -c $COUNTRY_CODE'
 SectionEnd
 
 ;--------------------------------
 ;Descriptions
 
   ;USE A LANGUAGE STRING IF YOU WANT YOUR DESCRIPTIONS TO BE LANGAUGE SPECIFIC
-  LangString DESC_SecMain_Eng ${LANG_ENGLISH} "Main program files of ${PROGRAM_NAME}."
-  LangString DESC_SecStartMenu_Eng ${LANG_ENGLISH} "Create Start Menu shortcuts for ${PROGRAM_NAME}"
-  LangString DESC_SecStartup_Eng ${LANG_ENGLISH} "Auto run ${PROGRAM_NAME} at Windows startup (network connection at startup is required)"
+  LangString NAME_SecMain ${LANG_ENGLISH} "!PyBingWallpaper Main Programs" 
+  LangString NAME_SecStartMenu ${LANG_ENGLISH} "Start Menu Shortcuts" 
+  LangString NAME_SecStartup ${LANG_ENGLISH} "Run at Windows Startup" 
+  LangString NAME_SecRunit ${LANG_ENGLISH} "Change Wallpaper After Installation" 
+  LangString NAME_SecGrCountry ${LANG_ENGLISH} "Country Setting" 
+
+  LangString DESC_SecMain ${LANG_ENGLISH} "Main program files of ${PROGRAM_NAME}."
+  LangString DESC_SecStartMenu ${LANG_ENGLISH} "Create Start Menu shortcuts for ${PROGRAM_NAME}"
+  LangString DESC_SecStartup ${LANG_ENGLISH} "Auto run ${PROGRAM_NAME} at Windows startup (network connection at startup is required)"
+  LangString DESC_SecRunit ${LANG_ENGLISH} "Run ${PROGRAM_NAME} and change wallpaper immediately after installation"
+  LangString DESC_SecGrCountry ${LANG_ENGLISH} "Bing.com wallpaper may vary from countries"
   
-  LangString DESC_SecMain_Eng ${LANG_SimpChinese} "${PROGRAM_NAME}主程序文件"
-  LangString DESC_SecStartMenu_Eng ${LANG_SimpChinese} "在开始菜单创建${PROGRAM_NAME}快捷方式"
-  LangString DESC_SecStartup_Eng ${LANG_SimpChinese} "启动Windows时自动运行${PROGRAM_NAME}（启动时需要访问网络）"
+
+
+  LangString NAME_SecMain ${LANG_SimpChinese} "PyBingWallpaper主程序" 
+  LangString NAME_SecStartMenu ${LANG_SimpChinese} "创建开始菜单快捷方式" 
+  LangString NAME_SecStartup ${LANG_SimpChinese} "系统启动时运行" 
+  LangString NAME_SecRunit ${LANG_SimpChinese} "立即更换桌面" 
+  LangString NAME_SecGrCountry ${LANG_SimpChinese} "国家设置" 
+
+  LangString DESC_SecMain ${LANG_SimpChinese} "${PROGRAM_NAME}主程序文件"
+  LangString DESC_SecStartMenu ${LANG_SimpChinese} "在开始菜单创建${PROGRAM_NAME}快捷方式"
+  LangString DESC_SecStartup ${LANG_SimpChinese} "启动Windows时自动运行${PROGRAM_NAME}（启动时需要访问网络）"
+  LangString DESC_SecRunit ${LANG_SimpChinese} "安装完成后启动${PROGRAM_NAME}（需要访问网络）"
+  LangString DESC_SecGrCountry ${LANG_SimpChinese} "不同国家访问Bing.com时桌面可能会不同"
 
   ;Assign descriptions to sections
   !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
-    !insertmacro MUI_DESCRIPTION_TEXT ${SecMain} $(DESC_SecMain_Eng)
-    !insertmacro MUI_DESCRIPTION_TEXT ${SecStartMenu} $(DESC_SecStartMenu_Eng)
-    !insertmacro MUI_DESCRIPTION_TEXT ${SecStartup} $(DESC_SecStartup_Eng)
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecMain} $(DESC_SecMain)
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecStartMenu} $(DESC_SecStartMenu)
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecStartup} $(DESC_SecStartup)
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecRunit} $(DESC_SecRunit)
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecGrCountry} $(DESC_SecGrCountry)
   !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 
@@ -189,3 +211,44 @@ Section "Uninstall"
   RMDir /r "$INSTDIR"
 
 SectionEnd
+
+;--------------------------------
+Function upgrade
+  Push $R0
+; Uninstall old version before install a new one
+  ReadRegStr $R0 HKLM \  
+        "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PROGRAM_NAME}" \
+        "UninstallString"
+  StrCmp $R0 "" done
+  MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
+          "${PROGRAM_NAME} is already installed. $\n$\nClick 'OK' to remove the \
+          previous version or 'Cancel' to cancel this upgrade." \
+          IDOK uninst  
+  Abort
+
+uninst:  
+  ReadRegStr $R0 HKLM "Software\Genzj\${PROGRAM_NAME}" "Install_Dir"
+  ClearErrors
+  Exec $R0\uninstall.exe 
+done:
+  Pop $R0
+FunctionEnd
+
+Function .onInit
+  StrCpy $COUNTRY_CODE "us"
+  StrCpy $COUNTRY_CHOSEN ${country_us}
+  Call upgrade
+  !insertmacro MUI_LANGDLL_DISPLAY
+FunctionEnd
+
+Function .onSelChange
+
+  !insertmacro StartRadioButtons $COUNTRY_CHOSEN
+    !insertmacro RadioButton ${country_cn}
+    !insertmacro RadioButton ${country_jp}
+    !insertmacro RadioButton ${country_us}
+    !insertmacro RadioButton ${country_uk}
+  !insertmacro EndRadioButtons
+	
+FunctionEnd
+
