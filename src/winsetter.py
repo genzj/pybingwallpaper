@@ -65,6 +65,8 @@ if sys.platform == 'win32':
                 if lastvalue and self.BACKUP:
                     ret = self._set_value(k, lastvalue[0], self.VALUE_NAME+'Backup')
                 #ret = self._set_value(k, path)
+                self._set_value(k, '0', 'TileWallpaper')
+                self._set_value(k, '10', 'WallpaperStyle')
                 win32gui.SystemParametersInfo(SPI_SETDESKWALLPAPER, path, 1+2)
             except Exception as ex:
                 ret = False
