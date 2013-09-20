@@ -62,6 +62,9 @@ You can also create a shortcut by yourself, or add arguments to it.
     optional arguments:
       -h, --help            show this help message and exit
       -v, --version         show version information
+	  -c {cn,jp,us,uk}, --country {cn,jp,us,uk}
+							select country code sent to bing.com. bing.com in
+							different countries may show different backgrounds.
       -d, --debug           enable debug outputs. The more --debug the more
                             detailed the log will be
       -f, --force           adopt this photo even if its size may be strange to be

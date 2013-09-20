@@ -31,6 +31,11 @@ def parseargs(args):
     parser.add_argument('-v', '--version', action='version',
             version='%(prog)s-{} ({})'.format(REV, LINK),
             help='show version information')
+    parser.add_argument('-c', '--country', default=None,
+            choices=('cn', 'jp', 'us', 'uk'), 
+            help='''select country code sent to bing.com.
+            bing.com in different countries may show different
+            backgrounds.''')
     parser.add_argument('-d', '--debug', default=0,
             action='count',
             help='''enable debug outputs. 
@@ -91,7 +96,7 @@ def prepare_output_dir(d):
 def download_wallpaper(config):
     idx = config.offset
     p = config.persistence
-    s = bingwallpaper.BingWallpaperPage(idx, p, filter_wp = not config.force)
+    s = bingwallpaper.BingWallpaperPage(idx, p, filter_wp = not config.force, country_code = config.country)
 
     _logger.debug(repr(s))
     s.load()
@@ -122,7 +127,10 @@ def download_wallpaper(config):
             return r
         _logger.debug('no wallpaper, try next')
         
-        _logger.info('bad luck, no wallpaper today:(')
+    if s.filtered > 0:
+        _logger.info('%d picture(s) filtered, try again with -f option if you want them',
+                     s.filtered)
+    _logger.info('bad luck, no wallpaper today:(')
     return None
 
 def get_output_filename(config, link):

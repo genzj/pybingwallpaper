@@ -15,20 +15,45 @@ def _property_need_loading(f):
 class BingWallpaperPage:
     BASE_URL='http://www.bing.com'
     IMAGE_API='/HPImageArchive.aspx?format=js&idx={idx}&n={n}'
-    def __init__(self, idx, n=1, base=BASE_URL, api=IMAGE_API, filter_wp=True):
-        self.update(idx, n, base, api, filter_wp)
+    def __init__(self, idx, n=1, base=BASE_URL, api=IMAGE_API, filter_wp=True, country_code=None):
+        self.update(idx, n, base, api, filter_wp, country_code)
 
-    def update(self, idx, n, base, api, filter_wp):
+    def update(self, idx, n=1, base=BASE_URL, api=IMAGE_API, filter_wp=True, country_code=None):
         self.base = base
         self.api = api
         self.filter_wp = filter_wp
         self.reset()
         self.url = webutil.urljoin(self.base, self.api.format(idx=idx, n=n))
+        self.country_code = country_code
+        if country_code:
+            self.url = '&'.join([self.url, 'cc={}'.format(country_code)])
 
     def reset(self):
         self.__loaded = False
         self.content = ''
         self.__img_link = None
+        self.discovered = 0
+        self.filtered = 0
+
+    def _is_wp(self, image, filtermode='auto'):
+        if filtermode not in ('auto', 'strict'):
+            raise ValueError('Unknown filtermode {}'.format(str(filtermode)))
+        self.discovered += 1
+        url = image['url']
+        if image['wp']: 
+            _logger.debug('wp flag of %s is True, keep it', url)
+            return True
+        elif filtermode == 'auto':
+            # also guess from its resolution
+            resolution = re.search(r'(\d+)x(\d+)', url)
+            if resolution and int(resolution.groups()[0]) > 1024:
+                _logger.debug('guess %s is in %s, could be a wallpaper', url, resolution.groups())
+                return True
+        else:
+            _logger.info('%s is not for wallpaper, try force option if you want to keep it', 
+                        url)
+            self.filtered += 1
+            return False
 
     def _parse(self, rawfile):
         try:
@@ -40,7 +65,7 @@ class BingWallpaperPage:
         _logger.debug(self.content)
 
         if self.filter_wp:
-            self.__images = list(filter(lambda i:i['wp'], self.content['images']))
+            self.__images = list(filter(self._is_wp, self.content['images']))
         else:
             self.__images = self.content['images']
         self._update_img_link()
