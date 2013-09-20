@@ -26,7 +26,7 @@ then *add* a startup program with:
 You can also append arguments in *Command* box.
 
 #### Windows
-Download [need-installer]() and install it. A shortcut will be created in your 
+Download [installer here](https://www.dropbox.com/s/xit0plj5pnks2bu/pybingwp-1-1-0.exe) and install it. A shortcut will be created in your 
 startup folder. 
 
 You can also create a shortcut by yourself, or add arguments to it.
