@@ -32,7 +32,7 @@ def parseargs(args):
             version='%(prog)s-{} ({})'.format(REV, LINK),
             help='show version information')
     parser.add_argument('-c', '--country', default=None,
-            choices=('cn', 'jp', 'us', 'uk'), 
+            choices=('au', 'ca', 'cn', 'de', 'fr', 'jp', 'nz', 'us', 'uk'), 
             help='''select country code sent to bing.com.
             bing.com in different countries may show different
             backgrounds.''')
