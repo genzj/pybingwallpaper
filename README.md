@@ -1,4 +1,4 @@
-# PyBingWallpaper
+﻿# PyBingWallpaper
 
 ### What pybingwallpaper does
 
@@ -26,8 +26,9 @@ then *add* a startup program with:
 You can also append arguments in *Command* box.
 
 #### Windows
-Download [installer here](https://www.dropbox.com/s/xit0plj5pnks2bu/pybingwp-1-1-0.exe) and install it. A shortcut will be created in your 
-startup folder. 
+Download installer [from dropbox](https://www.dropbox.com/s/u5zn2shfckt1pc8/pybingwp-1-2-0.exe) 
+or from [Baidu Disk(百度盘)](http://pan.baidu.com/share/link?shareid=2668100115&uk=1107561948) 
+and install it. A shortcut will be created in your startup folder. 
 
 You can also create a shortcut by yourself, or add arguments to it.
 
