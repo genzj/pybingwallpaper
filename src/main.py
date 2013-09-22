@@ -9,9 +9,11 @@ import webutil
 import bingwallpaper
 import record
 import setter
+import sched
+import time
 
 NAME = 'pybingwallpaper'
-REV  = '1.1.0'
+REV  = '1.2.0'
 LINK = 'https://github.com/genzj/pybingwallpaper'
 HISTORY_FILE = pathjoin(expanduser('~'), 'bing-wallpaper-history.json')
 
@@ -31,6 +33,10 @@ def parseargs(args):
     parser.add_argument('-v', '--version', action='version',
             version='%(prog)s-{} ({})'.format(REV, LINK),
             help='show version information')
+    parser.add_argument('-b', '--background', default=False,
+            action='store_true',
+            help='''work in background (daemon mode) and check
+            wallpaper periodically (interval can be set by --interval).''')
     parser.add_argument('-c', '--country', default=None,
             choices=('au', 'ca', 'cn', 'de', 'fr', 'jp', 'nz', 'us', 'uk'), 
             help='''select country code sent to bing.com.
@@ -45,25 +51,28 @@ def parseargs(args):
             help='''adopt this photo even if its size may
                     be strange to be wallpaper. Disabled by
                     default''')
-    parser.add_argument('--redownload', default=False,
-            action='store_true',
-            help='''do not check history records. Download
-                    must be done. **This download will still
-                    be recorded in history file.**
-            ''')
+    parser.add_argument('--interval', type=int, default=8,
+            help='''interval between each two wallpaper checkings 
+                    in unit of hours. applicable only in `background` mode''')
     parser.add_argument('-k', '--keep-file-name', default=False,
             action='store_true',
             help='''keep the original filename. By default
             downloaded file will be renamed as 'wallpaper.jpg'.
             Keep file name will retain all downloaded photos
             ''')
+    parser.add_argument('-o','--offset', type=int, default='0',
+            help='''start downloading from the photo of 'N' days ago.
+                    specify 0 to download photo of today.''')
     parser.add_argument('--persistence', type=int, default='3',
             help='''go back for at most N-1 pages if photo of today isn\'t for
             wallpaper. Backward browsing will be interrupted before N-1 pages
             tried if either a downloaded page found or a wallpaper link read''')
-    parser.add_argument('-o','--offset', type=int, default='0',
-            help='''start downloading from the photo of 'N' days ago.
-                    specify 0 to download photo of today.''')
+    parser.add_argument('--redownload', default=False,
+            action='store_true',
+            help='''do not check history records. Download
+                    must be done. **This download will still
+                    be recorded in history file.**
+            ''')
     parser.add_argument('-s', '--setter', choices=setters,
             default=setters[1],
             help='''specify interface to be called for
@@ -103,7 +112,7 @@ def download_wallpaper(config):
     _logger.debug(str(s))
     if not s.loaded():
         _logger.fatal('can not load url %s. aborting...', s.url)
-        sysexit(1)
+        return None
     for i in s.images():
         wplink = i['url']
 
@@ -114,7 +123,6 @@ def download_wallpaper(config):
             if rec and outfile == rec['local_file']:
                 if not config.redownload:
                     _logger.info('file has been downloaded before, exit')
-                    sysexit(0)
                     return None
                 else:
                     _logger.info('file has been downloaded before, redownload it')
@@ -173,12 +181,8 @@ def set_debug_details(level):
         l = log.PAGEDUMP
     log.setDebugLevel(l)
 
-
-if __name__ == '__main__':
-    config = parseargs(argv[1:])
-    set_debug_details(config.debug)
-    _logger.debug(config)
-
+def main(config, daemon=None):
+    if daemon: _logger.info('daemon %s triggers an update', str(daemon))
     setter.load_ext_setters(dirname(abspath(argv[0])))
 
     prepare_output_dir(config.output_folder)
@@ -195,4 +199,32 @@ if __name__ == '__main__':
         _logger.info('setting wallpaper %s', filerecord['local_file'])
         s.set(filerecord['local_file'], config.setter_args)
         _logger.info('all done. enjoy your new wallpaper')
+
+    if daemon: schedule_next_poll(config, daemon)
+
+def schedule_next_poll(config, daemon):
+    if config.background and daemon:
+        _logger.debug('schedule next running in %d seconds', config.interval*3600)
+        daemon.enter(config.interval*3600, 1, main, (config, daemon))
+    elif not config.background:
+        _logger.error('not in daemon mode')
+    elif not daemon:
+        _logger.error('no scheduler')
+
+def start_daemon(config):
+    daemon = sched.scheduler()
+    
+    main(config, daemon)
+    _logger.info('daemon %s is running', str(daemon))
+    daemon.run()
+    _logger.info('daemon %s exited', str(daemon))
+
+if __name__ == '__main__':
+    config = parseargs(argv[1:])
+    set_debug_details(config.debug)
+    _logger.debug(config)
+    if config.background:
+        start_daemon(config)
+    else:
+        main(config, None)
     sysexit(0)

@@ -24,7 +24,7 @@
 Name ${PROGRAM_NAME}
 
 ; The file to write
-OutFile "pybingwp-1-1-0.exe"
+OutFile "pybingwp-1-2-0.exe"
 
 ; The default installation directory
 InstallDir $PROGRAMFILES\Genzj\${PROGRAM_NAME}
@@ -115,11 +115,26 @@ Section $(NAME_SecMain) SecMain
 SectionEnd
 
 SectionGroup $(NAME_SecGrCountry) SecGrCountry
+  Section /o "Australia" country_au
+    StrCpy $COUNTRY_CODE "au"
+  SectionEnd
+  Section /o "Canada" country_ca
+    StrCpy $COUNTRY_CODE "ca"
+  SectionEnd
   Section /o "China" country_cn
     StrCpy $COUNTRY_CODE "cn"
   SectionEnd
+  Section /o "Germany" country_de
+    StrCpy $COUNTRY_CODE "de"
+  SectionEnd
+  Section /o "France" country_fr
+    StrCpy $COUNTRY_CODE "fr"
+  SectionEnd
   Section /o "Japan" country_jp
     StrCpy $COUNTRY_CODE "jp"
+  SectionEnd
+  Section /o "New Zealand" country_nz
+    StrCpy $COUNTRY_CODE "nz"
   SectionEnd
   Section "USA" country_us
     StrCpy $COUNTRY_CODE "us"
@@ -139,12 +154,12 @@ SectionEnd
 
 ; Create auto startup
 Section $(NAME_SecStartup) SecStartup
-  CreateShortCut "$SMSTARTUP\${PROGRAM_NAME}.lnk" "$INSTDIR\BingWallpaper.exe" "-c $COUNTRY_CODE" "$INSTDIR\bingwallpaper.ico" 0
+  CreateShortCut "$SMSTARTUP\${PROGRAM_NAME}.lnk" "$INSTDIR\BingWallpaper.exe" "-b -c $COUNTRY_CODE" "$INSTDIR\bingwallpaper.ico" 0
 SectionEnd
 
 ; Run it immediately
 Section $(NAME_SecRunit) SecRunit
-  Exec '"$INSTDIR\BingWallpaper.exe" -f -c $COUNTRY_CODE'
+  Exec '"$INSTDIR\BingWallpaper.exe" -b -f -c $COUNTRY_CODE'
 SectionEnd
 
 ;--------------------------------
@@ -244,8 +259,13 @@ FunctionEnd
 Function .onSelChange
 
   !insertmacro StartRadioButtons $COUNTRY_CHOSEN
+    !insertmacro RadioButton ${country_au}
+    !insertmacro RadioButton ${country_ca}
     !insertmacro RadioButton ${country_cn}
+    !insertmacro RadioButton ${country_de}
+    !insertmacro RadioButton ${country_fr}
     !insertmacro RadioButton ${country_jp}
+    !insertmacro RadioButton ${country_nz}
     !insertmacro RadioButton ${country_us}
     !insertmacro RadioButton ${country_uk}
   !insertmacro EndRadioButtons

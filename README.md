@@ -52,49 +52,58 @@ You can also create a shortcut by yourself, or add arguments to it.
 
 ### Usage
 
-    usage: pybingwallpaper [-h] [-v] [-d] [-f] [--redownload] [-k]
-                           [--persistence PERSISTENCE] [-s {no,gnome3,gnome2}]
-                           [--setter-args SETTER_ARGS] [-t OUTPUT_FOLDER]
-
-    Download the wallpaper offered by National Geographicphotography website and
-    set it current wallpaper background.
-
+    usage: pybingwallpaper [-h] [-v] [-b] 
+                           [-c {au,ca,cn,de,fr,jp,nz,us,uk}] [-d]
+                           [-f] [--interval INTERVAL] [-k] [-o OFFSET]
+                           [--persistence PERSISTENCE] [--redownload]
+                           [-s {no,win}] [--setter-args SETTER_ARGS]
+                           [-t OUTPUT_FOLDER]
+    
+    Download the wallpaper offered by Bing.com and set it current wallpaper
+    background.
+    
     optional arguments:
       -h, --help            show this help message and exit
       -v, --version         show version information
-	  -c {cn,jp,us,uk}, --country {cn,jp,us,uk}
-							select country code sent to bing.com. bing.com in
-							different countries may show different backgrounds.
+      -b, --background      work in background (daemon mode) and check wallpaper
+                            periodically (interval can be set by --interval).
+      -c {au,ca,cn,de,fr,jp,nz,us,uk}, --country {au,ca,cn,de,fr,jp,nz,us,uk}
+                            select country code sent to bing.com. bing.com in
+                            different countries may show different backgrounds.
       -d, --debug           enable debug outputs. The more --debug the more
                             detailed the log will be
       -f, --force           adopt this photo even if its size may be strange to be
                             wallpaper. Disabled by default
-      --redownload          do not consider history records. Download must be
-                            done. But this download will be recorded in history
-                            file.
+      --interval INTERVAL   interval between each two wallpaper checkings in unit
+                            of hours. applicable only in `background` mode
       -k, --keep-file-name  keep the original filename. By default downloaded file
                             will be renamed as 'wallpaper.jpg'. Keep file name
                             will retain all downloaded photos
+      -o OFFSET, --offset OFFSET
+                            start downloading from the photo of 'N' days ago.
+                            specify 0 to download photo of today.
       --persistence PERSISTENCE
                             go back for at most N-1 pages if photo of today isn't
                             for wallpaper. Backward browsing will be interrupted
                             before N-1 pages tried if either a downloaded page
                             found or a wallpaper link read
-      -o OFFSET, --offset OFFSET
-                            start downloading from the photo of 'N' days ago.
-                            specify 0 to download photo of today.
-      -s {no,gnome3,gnome2,win}, --setter {no,gnome3,gnome2,win}
+      --redownload          do not check history records. Download must be done.
+                            **This download will still be recorded in history
+                            file.**
+      -s {no,win}, --setter {no,win}
                             specify interface to be called for setting wallpaper.
                             'no' indicates downloading-only; 'gnome2/3' are only
                             for Linux with gnome; 'win' is for Windows only.
                             Customized setter can be added as dev doc described.
-                            Default: gnome3(Linux) or win(Win32)
+                            Default: win
       --setter-args SETTER_ARGS
-                            arguments for specified setter
+                            go back for at most N-1 pages if photo of today isn't
+                            for
       -t OUTPUT_FOLDER, --output-folder OUTPUT_FOLDER
                             specify the folder to store photos. Use
                             '~/MyBingWallpapers' folder in Linux or 'My
                             Documents/MyBingWallpapers' in Windows by default
+    
 
 ----------
 
