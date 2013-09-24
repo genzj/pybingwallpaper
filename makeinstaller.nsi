@@ -208,7 +208,45 @@ SectionEnd
 
 ; Uninstaller
 
+Function un.kill_running_instances
+  Push $0
+  Push $1
+  StrCpy $0 $R1
+  DetailPrint "Searching for processes called '$0'"
+  KillProc::FindProcesses
+  StrCmp $1 "-1" wooops
+  DetailPrint "-> Found $0 processes"
+ 
+  StrCmp $0 "0" completed
+  Sleep 1500
+ 
+  StrCpy $0 $R1
+  DetailPrint "Killing all processes called '$0'"
+  KillProc::KillProcesses
+  StrCmp $1 "-1" wooops
+  DetailPrint "-> Killed $0 processes, failed to kill $1 processes"
+ 
+  Goto completed
+ 
+  wooops:
+  DetailPrint "-> Error: Something went wrong :-("
+  Pop $1
+  Pop $0
+  Abort
+
+  completed:
+  DetailPrint "Everything went okay :-D"
+  Pop $1
+  Pop $0
+FunctionEnd
+
 Section "Uninstall"
+  
+  StrCpy $R1 "BingWallpaper.exe"
+  Call un.kill_running_instances
+  
+  StrCpy $R1 "BingWallpaper-cli.exe"
+  Call un.kill_running_instances
   
   ; Remove registry keys
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PROGRAM_NAME}"
