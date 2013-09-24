@@ -13,7 +13,7 @@ import sched
 import time
 
 NAME = 'pybingwallpaper'
-REV  = '1.2.0'
+REV  = '1.3.0'
 LINK = 'https://github.com/genzj/pybingwallpaper'
 HISTORY_FILE = pathjoin(expanduser('~'), 'bing-wallpaper-history.json')
 
@@ -41,37 +41,48 @@ def parseargs(args):
             choices=('au', 'ca', 'cn', 'de', 'fr', 'jp', 'nz', 'us', 'uk'), 
             help='''select country code sent to bing.com.
             bing.com in different countries may show different
-            backgrounds.''')
+            backgrounds. Note: only China(cn), Netherland(nz) and USA(us) have
+            high resolution (1920x1200) wallpapers; the rest offer 1366x768 only.''')
     parser.add_argument('-d', '--debug', default=0,
             action='count',
             help='''enable debug outputs. 
             The more --debug the more detailed the log will be''')
     parser.add_argument('-f', '--force', default=False,
             action='store_true',
-            help='''adopt this photo even if its size may
-                    be strange to be wallpaper. Disabled by
-                    default''')
-    parser.add_argument('--interval', type=int, default=8,
+            help='''obsolete since 1.3.0''')
+    parser.add_argument('-i', '--interval', type=int, default=2,
             help='''interval between each two wallpaper checkings 
-                    in unit of hours. applicable only in `background` mode''')
+                    in unit of hours. applicable only in `background` mode.
+                    2 hours by default.''')
     parser.add_argument('-k', '--keep-file-name', default=False,
             action='store_true',
             help='''keep the original filename. By default
             downloaded file will be renamed as 'wallpaper.jpg'.
             Keep file name will retain all downloaded photos
             ''')
+    parser.add_argument('-m', '--size-mode', default='prefer',
+            choices=('prefer', 'insist', 'never'),
+            help='''set selecting strategy when wallpapers in different 
+                    size are available (normally 1920x1200 and 1366x768).
+                    `prefer` (default) uses high resolution if it's 
+                    available, otherwise downloads normal resolution;
+                    `insist` always use high resolution and ignore 
+                    other pictures (Note: some countries have only
+                    normal size wallpapers, if `insist` is adopted
+                    with those sites, no wallpaper can be downloaded,
+                    see `--country` for more);
+                    `never` always use normal resolution.'''
+            )
     parser.add_argument('-o','--offset', type=int, default='0',
             help='''start downloading from the photo of 'N' days ago.
                     specify 0 to download photo of today.''')
     parser.add_argument('--persistence', type=int, default='3',
-            help='''go back for at most N-1 pages if photo of today isn\'t for
-            wallpaper. Backward browsing will be interrupted before N-1 pages
-            tried if either a downloaded page found or a wallpaper link read''')
+            help='''obsolete since 1.3.0''')
     parser.add_argument('--redownload', default=False,
             action='store_true',
             help='''do not check history records. Download
-                    must be done. **This download will still
-                    be recorded in history file.**
+                    must be done. downloaded picture will still
+                    be recorded in history file.
             ''')
     parser.add_argument('-s', '--setter', choices=setters,
             default=setters[1],
@@ -83,13 +94,14 @@ def parseargs(args):
                     be added as dev doc described. Default: {}
             '''.format(setters[1]))
     parser.add_argument('--setter-args', default=[], action='append',
-            help='''go back for at most N-1 pages if photo of today isn\'t for
-            ''')
+            help='''arguments for external setters''')
     parser.add_argument('-t', '--output-folder',
             default=pathjoin(expanduser('~'), 'MyBingWallpapers'),
             help='''specify the folder to store photos.
-                    Use '~/MyBingWallpapers' folder in Linux or
-                    'My Documents/MyBingWallpapers' in Windows by default
+                    Use '~/MyBingWallpapers' folder in Linux, 
+                    'C:/Documents and Settings/<your-username>/MyBingWallpapers 
+                    in Windows XP or 'C:/Users/<your-username>/MyBingWallpapers' 
+                    in Windows 7 by default
                 ''')
     config = parser.parse_args(args)
     config.setter_args = ','.join(config.setter_args).split(',')
@@ -104,18 +116,20 @@ def prepare_output_dir(d):
 
 def download_wallpaper(config):
     idx = config.offset
-    p = config.persistence
-    s = bingwallpaper.BingWallpaperPage(idx, p, filter_wp = not config.force, country_code = config.country)
+    s = bingwallpaper.BingWallpaperPage(idx, 
+                                        country_code = config.country,
+                                        high_resolution = bingwallpaper.HighResolutionSetting.getByName(
+                                                            config.size_mode
+                                                            )
+                                        )
 
     _logger.debug(repr(s))
     s.load()
-    _logger.debug(str(s))
+    _logger.log(log.PAGEDUMP, str(s))
     if not s.loaded():
         _logger.fatal('can not load url %s. aborting...', s.url)
         return None
-    for i in s.images():
-        wplink = i['url']
-
+    for wplink, info in s.image_links():
         if wplink:
             outfile = get_output_filename(config, wplink)
             rec = record.default_manager.get(wplink, None)
@@ -127,7 +141,7 @@ def download_wallpaper(config):
                 else:
                     _logger.info('file has been downloaded before, redownload it')
 
-            _logger.info('download photo of "%s"', i['copyright'])
+            _logger.info('download photo of "%s"', info)
             picture_content = webutil.loadurl(wplink)
             if picture_content:
                 with open(outfile, 'wb') as of:

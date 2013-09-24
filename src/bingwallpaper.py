@@ -12,19 +12,35 @@ def _property_need_loading(f):
         return f(*args, **kwargs)
     return wrapper
 
+class HighResolutionSetting:
+    PREFER = 1
+    INSIST = 2
+    NEVER = 3
+    @staticmethod
+    def getByName(name):
+        k = {'prefer': HighResolutionSetting.PREFER,
+             'insist': HighResolutionSetting.INSIST,
+             'never' : HighResolutionSetting.NEVER
+             }
+        if name not in k:
+            raise ValueError('{} is not a legal resolution setting'.format(name))
+        return k[name]
+
 class BingWallpaperPage:
     BASE_URL='http://www.bing.com'
     IMAGE_API='/HPImageArchive.aspx?format=js&idx={idx}&n={n}'
-    def __init__(self, idx, n=1, base=BASE_URL, api=IMAGE_API, filter_wp=True, country_code=None):
-        self.update(idx, n, base, api, filter_wp, country_code)
+    def __init__(self, idx, n=10, base=BASE_URL, api=IMAGE_API, country_code=None, 
+                high_resolution = HighResolutionSetting.PREFER):
+        self.update(idx, n, base, api, country_code, high_resolution)
 
-    def update(self, idx, n=1, base=BASE_URL, api=IMAGE_API, filter_wp=True, country_code=None):
+    def update(self, idx, n=10, base=BASE_URL, api=IMAGE_API, country_code=None,
+                high_resolution = HighResolutionSetting.PREFER):
         self.base = base
         self.api = api
-        self.filter_wp = filter_wp
         self.reset()
         self.url = webutil.urljoin(self.base, self.api.format(idx=idx, n=n))
         self.country_code = country_code
+        self.high_resolution = high_resolution
         if country_code:
             self.url = '&'.join([self.url, 'cc={}'.format(country_code)])
 
@@ -34,26 +50,7 @@ class BingWallpaperPage:
         self.__img_link = None
         self.discovered = 0
         self.filtered = 0
-
-    def _is_wp(self, image, filtermode='auto'):
-        if filtermode not in ('auto', 'strict'):
-            raise ValueError('Unknown filtermode {}'.format(str(filtermode)))
-        self.discovered += 1
-        url = image['url']
-        if image['wp']: 
-            _logger.debug('wp flag of %s is True, keep it', url)
-            return True
-        elif filtermode == 'auto':
-            # also guess from its resolution
-            resolution = re.search(r'(\d+)x(\d+)', url)
-            if resolution and int(resolution.groups()[0]) > 1024:
-                _logger.debug('guess %s is in %s, could be a wallpaper', url, resolution.groups())
-                return True
-        else:
-            _logger.info('%s is not for wallpaper, try force option if you want to keep it', 
-                        url)
-            self.filtered += 1
-            return False
+        self.wplinks = []
 
     def _parse(self, rawfile):
         try:
@@ -67,17 +64,33 @@ class BingWallpaperPage:
         
         _logger.debug(self.content)
 
-        if self.filter_wp:
-            self.__images = list(filter(self._is_wp, self.content['images']))
-        else:
-            self.__images = self.content['images']
+        self.__images = self.content['images']
         self._update_img_link()
 
         return True
 
     def _update_img_link(self):
+        self.wplinks.clear()
         for i in self.__images:
-            i['url'] = webutil.urljoin(self.base, i['url'])
+            _logger.debug('handling %s', i['url'])
+            if self.high_resolution == HighResolutionSetting.PREFER:
+                if i.get('wp', False):
+                    wplink = webutil.urljoin(self.base, '_'.join([i['urlbase'],'1920x1200.jpg'])) 
+                    _logger.debug('in prefer mode, get high resolution url %s', wplink)
+                else:
+                    wplink = webutil.urljoin(self.base, i['url'])
+                    _logger.debug('in prefer mode, get normal resolution url %s', wplink)
+            elif self.high_resolution == HighResolutionSetting.INSIST:
+                if i.get('wp', False):
+                    wplink = webutil.urljoin(self.base, '_'.join([i['urlbase'],'1920x1200.jpg'])) 
+                    _logger.debug('in insist mode, get high resolution url %s', wplink)
+                else:
+                    wplink = None
+                    _logger.debug('in insist mode, drop normal resolution pic')
+            elif self.high_resolution == HighResolutionSetting.NEVER:
+                wplink = webutil.urljoin(self.base, i['url'])
+                _logger.debug('never use high resolution, use %s', wplink)
+            if wplink: self.wplinks.append((wplink, i['copyright']))
 
     def load(self):
         self.reset()
@@ -99,7 +112,7 @@ class BingWallpaperPage:
     
     @_property_need_loading
     def image_links(self):
-        return [i['url'] for i in self.images()]
+        return self.wplinks
 
     def _assert_load(self, propname):
         if not self.loaded():

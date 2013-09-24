@@ -24,7 +24,7 @@
 Name ${PROGRAM_NAME}
 
 ; The file to write
-OutFile "pybingwp-1-2-0.exe"
+OutFile "pybingwp-1-3-0.exe"
 
 ; The default installation directory
 InstallDir $PROGRAMFILES\Genzj\${PROGRAM_NAME}
@@ -121,7 +121,7 @@ SectionGroup $(NAME_SecGrCountry) SecGrCountry
   Section /o "Canada" country_ca
     StrCpy $COUNTRY_CODE "ca"
   SectionEnd
-  Section /o "China" country_cn
+  Section /o "China (HD)" country_cn
     StrCpy $COUNTRY_CODE "cn"
   SectionEnd
   Section /o "Germany" country_de
@@ -133,10 +133,10 @@ SectionGroup $(NAME_SecGrCountry) SecGrCountry
   Section /o "Japan" country_jp
     StrCpy $COUNTRY_CODE "jp"
   SectionEnd
-  Section /o "New Zealand" country_nz
+  Section /o "New Zealand (HD)" country_nz
     StrCpy $COUNTRY_CODE "nz"
   SectionEnd
-  Section "USA" country_us
+  Section "USA (HD)" country_us
     StrCpy $COUNTRY_CODE "us"
   SectionEnd
   Section /o "United Kingdom" country_uk
@@ -147,8 +147,10 @@ SectionGroupEnd
 Section $(NAME_SecStartMenu) SecStartMenu
   CreateDirectory "$SMPROGRAMS\${PROGRAM_NAME}"
   CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
-  CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME}.lnk" "$INSTDIR\BingWallpaper.exe" "--redownload -c $COUNTRY_CODE" "$INSTDIR\bingwallpaper.ico" 0
-  CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME} Commandline Mode.lnk" "cmd" '/k "$INSTDIR\BingWallpaper-cli.exe" --redownload -c $COUNTRY_CODE' \
+  CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME}.lnk" "$INSTDIR\BingWallpaper.exe" \
+                 "--redownload -c $COUNTRY_CODE" "$INSTDIR\bingwallpaper.ico" 0
+  CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME} Commandline Mode.lnk" "cmd" \
+                 '/k "$INSTDIR\BingWallpaper-cli.exe" --redownload -c $COUNTRY_CODE' \
                  "$INSTDIR\bingwallpaper.ico" 0
 SectionEnd
 
@@ -159,7 +161,7 @@ SectionEnd
 
 ; Run it immediately
 Section $(NAME_SecRunit) SecRunit
-  Exec '"$INSTDIR\BingWallpaper.exe" -b -f -c $COUNTRY_CODE'
+  Exec '"$INSTDIR\BingWallpaper.exe" -b -c $COUNTRY_CODE'
 SectionEnd
 
 ;--------------------------------
@@ -176,7 +178,7 @@ SectionEnd
   LangString DESC_SecStartMenu ${LANG_ENGLISH} "Create Start Menu shortcuts for ${PROGRAM_NAME}"
   LangString DESC_SecStartup ${LANG_ENGLISH} "Auto run ${PROGRAM_NAME} at Windows startup (network connection at startup is required)"
   LangString DESC_SecRunit ${LANG_ENGLISH} "Run ${PROGRAM_NAME} and change wallpaper immediately after installation"
-  LangString DESC_SecGrCountry ${LANG_ENGLISH} "Bing.com wallpaper may vary from countries"
+  LangString DESC_SecGrCountry ${LANG_ENGLISH} "Bing.com wallpaper may vary from countries. Those countries marked (HD) support high resolution wallpapers(1920x1200)"
   
 
 
@@ -190,7 +192,7 @@ SectionEnd
   LangString DESC_SecStartMenu ${LANG_SimpChinese} "在开始菜单创建${PROGRAM_NAME}快捷方式"
   LangString DESC_SecStartup ${LANG_SimpChinese} "启动Windows时自动运行${PROGRAM_NAME}（启动时需要访问网络）"
   LangString DESC_SecRunit ${LANG_SimpChinese} "安装完成后启动${PROGRAM_NAME}（需要访问网络）"
-  LangString DESC_SecGrCountry ${LANG_SimpChinese} "不同国家访问Bing.com时桌面可能会不同"
+  LangString DESC_SecGrCountry ${LANG_SimpChinese} "不同国家访问Bing.com时桌面可能会不同。标有HD的分站支持高分辨率桌面(1920x1200)"
 
   ;Assign descriptions to sections
   !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
