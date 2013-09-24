@@ -127,12 +127,14 @@ def download_wallpaper(config):
                 else:
                     _logger.info('file has been downloaded before, redownload it')
 
-            with open(outfile, 'wb') as of:
-                _logger.info('download photo of "%s"', i['copyright'])
-                of.write(webutil.loadurl(wplink))
-            _logger.info('file saved %s', outfile)
-            r = record.DownloadRecord(wplink, outfile)
-            return r
+            _logger.info('download photo of "%s"', i['copyright'])
+            picture_content = webutil.loadurl(wplink)
+            if picture_content:
+                with open(outfile, 'wb') as of:
+                    of.write(picture_content)
+                    _logger.info('file saved %s', outfile)
+                r = record.DownloadRecord(wplink, outfile)
+                return r
         _logger.debug('no wallpaper, try next')
         
     if s.filtered > 0:
