@@ -61,6 +61,9 @@ class BingWallpaperPage:
         except Exception as ex:
             _logger.exception(ex)
             return False
+
+        # including blank response or 'null' in json
+        if not self.content: return False
         
         _logger.debug(self.content)
 
