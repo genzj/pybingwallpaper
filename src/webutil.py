@@ -18,6 +18,7 @@ if sys.version_info[:2] < (3, 0):
     Request = _urllib2.Request
     urlopen2 = _urllib2.urlopen
 else:
+    from ntlmauth import HTTPNtlmAuthHandler
     _logger.debug('importing libs for python 3.x')
     _urlparse = import_module('urllib.parse')
     _urlrequest = import_module('urllib.request')
@@ -25,6 +26,18 @@ else:
     urlencode = _urlparse.urlencode
     Request = _urlrequest.Request
     urlopen2 = _urlrequest.urlopen
+
+    def setup_proxy(proxy_protocols, proxy_url, proxy_port, sites, username="", password=""):
+        proxy_dict = {p:'%s:%s'%(proxy_url, proxy_port) for p in proxy_protocols}
+        ph=_urlrequest.ProxyHandler(proxy_dict)
+        passman = _urlrequest.HTTPPasswordMgrWithDefaultRealm()
+
+        _logger.info('add proxy site %s', sites)
+        passman.add_password(None, sites, username, password)
+        pah= HTTPNtlmAuthHandler.ProxyNtlmAuthHandler(passman)
+        cp=_urlrequest.HTTPCookieProcessor()
+        opener=_urlrequest.build_opener(cp, _urlrequest.HTTPSHandler(debuglevel=1), _urlrequest.HTTPHandler(debuglevel=99), ph, pah, _urlrequest.HTTPErrorProcessor())
+        _urlrequest.install_opener(opener)
 
 urljoin = _urlparse.urljoin
 

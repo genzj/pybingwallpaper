@@ -34,8 +34,6 @@ class AbstractNtlmAuthHandler:
 
     def retry_using_http_NTLM_auth(self, req, auth_header_field, realm, headers):
         user, pw = self.passwd.find_user_password(realm, req.get_full_url())
-        if not pw:
-            user, pw = self.passwd.find_user_password(None, 'ntlm')
         if pw is not None:
             user_parts = user.split('\\', 1)
             if len(user_parts) == 1:

@@ -236,23 +236,17 @@ def start_daemon(config):
     _logger.info('daemon %s exited', str(daemon))
 
 def install_proxy():
-    from ntlmauth import HTTPNtlmAuthHandler
-    import urllib
-    PROXY_PROTOCOL = 'http,https'
-    PROXY_URL = "http://10.10.1.1"
+    from itertools import product
+    PROXY_SITES_PROTOCOL = ('http', 'https')
+    PROXY_SITES = ('bing.com', 'www.bing.com', 'cn.bing.com', 'nz.bing.com')
+    PROXY_URL = "http://10.1.1.1"
     PROXY_PORT = "80"
 
     PROXY_AUTH_USERNAME = ""
     PROXY_AUTH_PASSWORD = ""
 
-    proxy_dict = {p:'%s:%s'%(PROXY_URL, PROXY_PORT) for p in PROXY_PROTOCOL.split(',')}
-    ph=urllib.request.ProxyHandler(proxy_dict)
-    passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
-    passman.add_password(None, 'ntlm', PROXY_AUTH_USERNAME, PROXY_AUTH_PASSWORD)
-    pah= HTTPNtlmAuthHandler.ProxyNtlmAuthHandler(passman)
-    cp=urllib.request.HTTPCookieProcessor()
-    opener=urllib.request.build_opener(cp, urllib.request.HTTPSHandler(debuglevel=1), urllib.request.HTTPHandler(debuglevel=99), ph, pah, urllib.request.HTTPErrorProcessor())
-    urllib.request.install_opener(opener)
+    proxy_sites = [p+'://'+s for p, s in product(('http', 'https'), PROXY_SITES)]
+    webutil.setup_proxy(PROXY_SITES_PROTOCOL, PROXY_URL, PROXY_PORT, proxy_sites, "user", "pass")
 
 if __name__ == '__main__':
     install_proxy()
