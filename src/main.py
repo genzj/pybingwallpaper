@@ -235,7 +235,27 @@ def start_daemon(config):
     daemon.run()
     _logger.info('daemon %s exited', str(daemon))
 
+def install_proxy():
+    from ntlmauth import HTTPNtlmAuthHandler
+    import urllib
+    PROXY_PROTOCOL = 'http,https'
+    PROXY_URL = "http://10.10.1.1"
+    PROXY_PORT = "80"
+
+    PROXY_AUTH_USERNAME = ""
+    PROXY_AUTH_PASSWORD = ""
+
+    proxy_dict = {p:'%s:%s'%(PROXY_URL, PROXY_PORT) for p in PROXY_PROTOCOL.split(',')}
+    ph=urllib.request.ProxyHandler(proxy_dict)
+    passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+    passman.add_password(None, 'ntlm', PROXY_AUTH_USERNAME, PROXY_AUTH_PASSWORD)
+    pah= HTTPNtlmAuthHandler.ProxyNtlmAuthHandler(passman)
+    cp=urllib.request.HTTPCookieProcessor()
+    opener=urllib.request.build_opener(cp, urllib.request.HTTPSHandler(debuglevel=1), urllib.request.HTTPHandler(debuglevel=99), ph, pah, urllib.request.HTTPErrorProcessor())
+    urllib.request.install_opener(opener)
+
 if __name__ == '__main__':
+    install_proxy()
     config = parseargs(argv[1:])
     set_debug_details(config.debug)
     _logger.debug(config)
