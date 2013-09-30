@@ -34,9 +34,16 @@ else:
 
         _logger.info('add proxy site %s', sites)
         passman.add_password(None, sites, username, password)
-        pah= HTTPNtlmAuthHandler.ProxyNtlmAuthHandler(passman)
+        pnah= HTTPNtlmAuthHandler.ProxyNtlmAuthHandler(passman)
+        pbah= _urlrequest.ProxyBasicAuthHandler(passman)
+        pdah= _urlrequest.ProxyDigestAuthHandler(passman)
+        
         cp=_urlrequest.HTTPCookieProcessor()
-        opener=_urlrequest.build_opener(cp, _urlrequest.HTTPSHandler(debuglevel=1), _urlrequest.HTTPHandler(debuglevel=99), ph, pah, _urlrequest.HTTPErrorProcessor())
+        opener=_urlrequest.build_opener(cp, 
+                                        _urlrequest.HTTPSHandler(debuglevel=1), 
+                                        _urlrequest.HTTPHandler(debuglevel=99), 
+                                        ph, pnah, pbah, pdah,
+                                        _urlrequest.HTTPErrorProcessor())
         _urlrequest.install_opener(opener)
 
 urljoin = _urlparse.urljoin
@@ -59,7 +66,7 @@ def loadurl(url, headers={}):
         _logger.exception(ex)
         return None
     if con:
-        _logger.debug("Hit %s %d", str(con), con.getcode())
+        _logger.debug("Hit %s code: %s", str(con), con.getcode())
         data = con.read(-1)
         data = _ungzip(data)
         _logger.log(log.PAGEDUMP, repr(data))

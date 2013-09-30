@@ -97,6 +97,7 @@ class AbstractNtlmAuthHandler:
 class HTTPNtlmAuthHandler(AbstractNtlmAuthHandler, urllib.request.BaseHandler):
 
     auth_header = 'Authorization'
+    handler_order = 480 # before Digest & Basic auth
 
     def http_error_401(self, req, fp, code, msg, headers):
         return self.http_error_authentication_required('www-authenticate', req, fp, headers)
@@ -108,6 +109,7 @@ class ProxyNtlmAuthHandler(AbstractNtlmAuthHandler, urllib.request.BaseHandler):
         use at your own risk
     """
     auth_header = 'Proxy-authorization'
+    handler_order = 480 # before Digest & Basic auth
 
     def http_error_407(self, req, fp, code, msg, headers):
         return self.http_error_authentication_required('proxy-authenticate', req, fp, headers)

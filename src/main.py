@@ -78,6 +78,14 @@ def parseargs(args):
                     specify 0 to download photo of today.''')
     parser.add_argument('--persistence', type=int, default='3',
             help='''obsolete since 1.3.0''')
+    parser.add_argument('--proxy-server', default='', 
+            help='''proxy server url, ex: http://10.1.1.1''')
+    parser.add_argument('--proxy-port', 
+            help='''port or proxy server, default: 80''', default='80')
+    parser.add_argument('--proxy-username', default='', 
+            help='''optional username for proxy server authentication''')
+    parser.add_argument('--proxy-password', default='', 
+            help='''optional password for proxy server authentication''')
     parser.add_argument('--redownload', default=False,
             action='store_true',
             help='''do not check history records. Download
@@ -204,6 +212,7 @@ def main(config, daemon=None):
     prepare_output_dir(config.output_folder)
 
     load_history()
+    install_proxy(config)
     filerecord = download_wallpaper(config)
 
     if filerecord:
@@ -235,21 +244,28 @@ def start_daemon(config):
     daemon.run()
     _logger.info('daemon %s exited', str(daemon))
 
-def install_proxy():
+def install_proxy(config):
     from itertools import product
+    if not config.proxy_server:
+        _logger.debug('no proxy server specified')
+        return
+    else:
+        if len(config.proxy_password) <= 4:
+            hidden_password = '*'*len(config.proxy_password)
+        else:
+            hidden_password = '%s%s%s'%(config.proxy_password[0], 
+                                        '*'*(len(config.proxy_password)-2), 
+                                        config.proxy_password[-1])
+        _logger.info('user specified proxy: "%s:%s"', config.proxy_server, config.proxy_port)
+        _logger.debug('proxy username: "%s" password: "%s"', config.proxy_username, hidden_password)
     PROXY_SITES_PROTOCOL = ('http', 'https')
     PROXY_SITES = ('bing.com', 'www.bing.com', 'cn.bing.com', 'nz.bing.com')
-    PROXY_URL = "http://10.1.1.1"
-    PROXY_PORT = "80"
-
-    PROXY_AUTH_USERNAME = ""
-    PROXY_AUTH_PASSWORD = ""
 
     proxy_sites = [p+'://'+s for p, s in product(('http', 'https'), PROXY_SITES)]
-    webutil.setup_proxy(PROXY_SITES_PROTOCOL, PROXY_URL, PROXY_PORT, proxy_sites, "user", "pass")
+    webutil.setup_proxy(PROXY_SITES_PROTOCOL, config.proxy_server, config.proxy_port, 
+                            proxy_sites, config.proxy_username, config.proxy_password)
 
 if __name__ == '__main__':
-    install_proxy()
     config = parseargs(argv[1:])
     set_debug_details(config.debug)
     _logger.debug(config)
