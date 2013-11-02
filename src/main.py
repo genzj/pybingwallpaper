@@ -38,10 +38,13 @@ def parseargs(args):
             help='''work in background (daemon mode) and check
             wallpaper periodically (interval can be set by --interval).''')
     parser.add_argument('-c', '--country', default=None,
-            choices=('au', 'ca', 'cn', 'de', 'fr', 'jp', 'nz', 'us', 'uk'), 
+            choices=('au', 'br', 'ca', 'cn', 'de', 'fr', 'jp', 'nz', 'us', 'uk'), 
             help='''select country code sent to bing.com.
             bing.com in different countries may show different
-            backgrounds. Note: only China(cn), Netherland(nz) and USA(us) have
+            backgrounds. 
+            au: Australia  br: Brazil  ca: Canada  cn: China  de:Germany
+            fr: France  jp: Japan  nz: Netherland  us: USA  uk: United Kingdom
+            Note: only China(cn), Netherland(nz) and USA(us) have
             high resolution (1920x1200) wallpapers; the rest offer 1366x768 only.''')
     parser.add_argument('-d', '--debug', default=0,
             action='count',

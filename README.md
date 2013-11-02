@@ -67,12 +67,14 @@ You can also create a shortcut by yourself, or add arguments to it.
       -v, --version         show version information
       -b, --background      work in background (daemon mode) and check wallpaper
                             periodically (interval can be set by --interval).
-      -c {au,ca,cn,de,fr,jp,nz,us,uk}, --country {au,ca,cn,de,fr,jp,nz,us,uk}
+      -c {au,br,ca,cn,de,fr,jp,nz,us,uk}, --country {au,br,ca,cn,de,fr,jp,nz,us,uk}
                             select country code sent to bing.com. bing.com in
                             different countries may show different backgrounds.
-                            Note: only China(cn), Netherland(nz) and USA(us) have
-                            high resolution (1920x1200) wallpapers; the rest offer
-                            1366x768 only.
+                            au: Australia br: Brazil ca: Canada cn: China
+                            de:Germany fr: France jp: Japan nz: Netherland us: USA
+                            uk: United Kingdom Note: only China(cn),
+                            Netherland(nz) and USA(us) have high resolution
+                            (1920x1200) wallpapers; the rest offer 1366x768 only.
       -d, --debug           enable debug outputs. The more --debug the more
                             detailed the log will be
       -f, --force           obsolete since 1.3.0

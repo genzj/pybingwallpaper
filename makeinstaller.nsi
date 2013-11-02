@@ -118,6 +118,9 @@ SectionGroup $(NAME_SecGrCountry) SecGrCountry
   Section /o "Australia" country_au
     StrCpy $COUNTRY_CODE "au"
   SectionEnd
+  Section /o "Brazil" country_br
+    StrCpy $COUNTRY_CODE "br"
+  SectionEnd
   Section /o "Canada" country_ca
     StrCpy $COUNTRY_CODE "ca"
   SectionEnd
@@ -300,6 +303,7 @@ Function .onSelChange
 
   !insertmacro StartRadioButtons $COUNTRY_CHOSEN
     !insertmacro RadioButton ${country_au}
+    !insertmacro RadioButton ${country_br}
     !insertmacro RadioButton ${country_ca}
     !insertmacro RadioButton ${country_cn}
     !insertmacro RadioButton ${country_de}
