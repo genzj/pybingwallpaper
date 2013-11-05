@@ -16,6 +16,10 @@ import http.client, socket
 from urllib.response import addinfourl
 from urllib.request import HTTPPasswordMgr
 from . import ntlm
+import inspect
+def debug_output(*args, **kwargs):
+    lineno = inspect.currentframe().f_back.f_lineno
+    print("debug at line ", lineno, ": ", *args, **kwargs)
 
 class AbstractNtlmAuthHandler:
     
@@ -34,6 +38,7 @@ class AbstractNtlmAuthHandler:
 
     def retry_using_http_NTLM_auth(self, req, auth_header_field, realm, headers):
         user, pw = self.passwd.find_user_password(realm, req.get_full_url())
+        debug_output(user, pw)
         if pw is not None:
             user_parts = user.split('\\', 1)
             if len(user_parts) == 1:
@@ -45,10 +50,12 @@ class AbstractNtlmAuthHandler:
                 UserName = user_parts[1]
                 type1_flags = ntlm.NTLM_ttype1_FLAGS
             # ntlm secures a socket, so we must use the same socket for the complete handshake
+            debug_output(hex(type1_flags))
             headers = dict(req.headers)
             headers.update(req.unredirected_hdrs)
             auth = 'NTLM %s' % ntlm.create_NTLM_NEGOTIATE_MESSAGE(user, type1_flags)
             if req.headers.get(self.auth_header, None) == auth:
+                debug_output("no auth_header")
                 return None
             headers[self.auth_header] = auth
             
@@ -67,23 +74,31 @@ class AbstractNtlmAuthHandler:
             r = h.getresponse()
             r.begin()
             r._safe_read(int(r.getheader('content-length')))
+            debug_output('data read')
             try:
                 if r.getheader('set-cookie'): 
                     # this is important for some web applications that store authentication-related info in cookies (it took a long time to figure out)
                     headers['Cookie'] = r.getheader('set-cookie')
+                    debug_output('cookie: ', headers['Cookie'])
             except TypeError:
+                debug_output('no cookie')
                 pass
             r.fp = None # remove the reference to the socket, so that it can not be closed by the response object (we want to keep the socket open)
             auth_header_value = r.getheader(auth_header_field, None)
+            debug_output(r.headers)
+            debug_output(auth_header_field, ': ', auth_header_value)
             (ServerChallenge, NegotiateFlags) = ntlm.parse_NTLM_CHALLENGE_MESSAGE(auth_header_value[5:])
+            debug_output('server c ', ServerChallenge, ' server flags ', hex(NegotiateFlags))
             auth = 'NTLM %s' % ntlm.create_NTLM_AUTHENTICATE_MESSAGE(ServerChallenge, UserName, DomainName, pw, NegotiateFlags)
             headers[self.auth_header] = auth
+            debug_output('auth ', auth)
             headers["Connection"] = "Close"
             headers = dict((name.title(), val) for name, val in list(headers.items()))
             try:
                 h.request(req.get_method(), req.get_selector(), req.data, headers)
                 # none of the configured handlers are triggered, for example redirect-responses are not handled!
                 response = h.getresponse()
+                debug_output('data 3 read')
                 def notimplemented():
                     raise NotImplementedError
                 response.readline = notimplemented
