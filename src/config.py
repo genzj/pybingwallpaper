@@ -32,8 +32,8 @@ class ConfigParameter:
         self.name = str(name)
         self.validate_name()
         self.defaults = defaults if isinstance(defaults, dict) else {'*': defaults}
-        self.type = type
-        self.choices = choices
+        if type is not None: self.type = type
+        if choices is not None: self.choices = choices
         self.help = help
         self.loader_opts = loader_opts if loader_opts is not None else dict()
 
@@ -53,8 +53,8 @@ class ConfigParameter:
                         self.__class__.__name__,
                         repr(self.name),
                         repr(self.defaults),
-                        repr(self.type),
-                        repr(self.choices),
+                        repr(self.type if hasattr(self, 'type') else None),
+                        repr(self.choices if hasattr(self, 'choices') else None),
                         repr(self.help),
                         repr(self.loader_opts)
                     )
@@ -112,14 +112,14 @@ class CommandLineArgumentsLoader(ConfigLoader):
     def param_to_arg_opts(self, param):
         # load common options
         opts = {
-                'type': param.type,
-                'choices': param.choices,
                 'help': param.help,
                 'dest': param.name,
             }
+        if hasattr(param, 'type'): opts['type'] = param.type
+        if hasattr(param, 'choices'): opts['choices'] = param.choices
 
         if self.generate_default:
-            opts['default'] = param.default
+            opts['default'] = param.get_default()
         
         # load specific options at last so that
         # specific ones take higher priority in case a same

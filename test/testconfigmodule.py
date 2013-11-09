@@ -2,6 +2,7 @@
 
 import unittest
 import sys
+import random
 
 sys.path.append('../src')
 
@@ -93,8 +94,8 @@ class TestCliLoader(unittest.TestCase):
     def getdb(self):
         return ConfigDatabase('test1', description='test desc')
 
-    def getloader(self):
-        return CommandLineArgumentsLoader()
+    def getloader(self, generate_default=False):
+        return CommandLineArgumentsLoader(generate_default=generate_default)
 
     def test_invalid_arg(self):
         loader = self.getloader()
@@ -111,11 +112,13 @@ class TestCliLoader(unittest.TestCase):
         p = ConfigParameter(name='param1', type=lambda s:int(s,0), loader_opts={'cli':cli_opts})
         db.add_param(p)
         loader = self.getloader()
-        ans = loader.load(db, ['-p', '1'])
-        self.assertEqual(getattr(ans, p.name), 1)
+
         with self.assertRaises(SystemExit) as se:
             loader.load(db, ['--param1', '1'])
         self.assertEqual(se.exception.code, 2)
+
+        ans = loader.load(db, ['-p', '1'])
+        self.assertEqual(getattr(ans, p.name), 1)
 
     def test_load_int(self):
         ds = [ 
@@ -148,4 +151,67 @@ class TestCliLoader(unittest.TestCase):
         for s in ds:
             ans = loader.load(db, ['--param1', s])
             self.assertEqual(getattr(ans, p.name), s)
+
+    def test_load_choice(self):
+        good = ['c1', 'c3', 'c2']
+        choices = ('c0', 'c1', 'c2', 'c3')
+        db = self.getdb()
+        p = ConfigParameter(name='param1', defaults='c1', choices=choices)
+        db.add_param(p)
+        loader = self.getloader(generate_default=True)
+        # try legal ones
+        for s in good:
+            ans = loader.load(db, ['--param1', s])
+            self.assertEqual(getattr(ans, p.name), s)
+        # test use default
+        ans = loader.load(db, [])
+        self.assertEqual(getattr(ans, p.name), good[0])
+
+        # test illegal value
+        with self.assertRaises(SystemExit) as se:
+            loader.load(db, ['--param1', 'no-good'])
+        self.assertEqual(se.exception.code, 2)
+        
+
             
+    def test_load_true(self):
+        cli_opts = {'action':'store_true'}
+        db = self.getdb()
+        p = ConfigParameter(name='param1', loader_opts={'cli':cli_opts})
+        db.add_param(p)
+        loader = self.getloader()
+        ans = loader.load(db, ['--param1'])
+        self.assertTrue(getattr(ans, p.name))
+        ans = loader.load(db, [])
+        self.assertFalse(getattr(ans, p.name))
+
+    def test_load_false(self):
+        cli_opts = {'action':'store_false'}
+        db = self.getdb()
+        p = ConfigParameter(name='param1', loader_opts={'cli':cli_opts})
+        db.add_param(p)
+        loader = self.getloader()
+        ans = loader.load(db, ['--param1'])
+        self.assertFalse(getattr(ans, p.name))
+        ans = loader.load(db, [])
+        self.assertTrue(getattr(ans, p.name))
+
+    def test_load_count(self):
+        cli_opts = {'action':'count'}
+        db = self.getdb()
+        p = ConfigParameter(name='d', defaults=0, loader_opts={'cli':cli_opts})
+        db.add_param(p)
+        loader = self.getloader(generate_default=True)
+        ans = loader.load(db, ['-d'])
+        self.assertEqual(getattr(ans, p.name), 1)
+        ans = loader.load(db, [])
+        self.assertEqual(getattr(ans, p.name), 0)
+        ans = loader.load(db, ['-d', '-d', '-d'])
+        self.assertEqual(getattr(ans, p.name), 3)
+        c = random.randint(0, 256)
+        ans = loader.load(db, ['-'+'d'*c])
+        self.assertEqual(getattr(ans, p.name), c)
+
+    class TestDefaultValueLoader(unittest.TestCase):
+        pass
+
