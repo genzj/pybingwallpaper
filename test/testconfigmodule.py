@@ -9,6 +9,10 @@ sys.path.append('../src')
 from config import ConfigParameter
 from config import ConfigDatabase
 from config import CommandLineArgumentsLoader
+from config import DefaultValueLoader
+
+def getdb():
+    return ConfigDatabase('test1', description='test desc')
 
 class TestConfigureParameter(unittest.TestCase):
     def setUp(self):
@@ -39,7 +43,7 @@ class TestConfigureDatabase(unittest.TestCase):
         pass
 
     def test_prog(self):
-        db = ConfigDatabase('test1')
+        db = getdb()
         self.assertEqual(db.prog, 'test1')
 
     def test_desc(self):
@@ -99,7 +103,7 @@ class TestCliLoader(unittest.TestCase):
 
     def test_invalid_arg(self):
         loader = self.getloader()
-        db = self.getdb()
+        db = getdb()
         p = ConfigParameter(name='param1', type=int)
         db.add_param(p)
         with self.assertRaises(SystemExit) as se:
@@ -107,7 +111,7 @@ class TestCliLoader(unittest.TestCase):
         self.assertEqual(se.exception.code, 2)
 
     def test_name(self):
-        db = self.getdb()
+        db = getdb()
         cli_opts = {'flags':['-p']}
         p = ConfigParameter(name='param1', type=lambda s:int(s,0), loader_opts={'cli':cli_opts})
         db.add_param(p)
@@ -128,7 +132,7 @@ class TestCliLoader(unittest.TestCase):
                 ('-9571293', -9571293),
              ]
 
-        db = self.getdb()
+        db = getdb()
         p = ConfigParameter(name='param1', type=lambda s:int(s,0))
         db.add_param(p)
         loader = self.getloader()
@@ -144,7 +148,7 @@ class TestCliLoader(unittest.TestCase):
                 '9 9'
              ]
 
-        db = self.getdb()
+        db = getdb()
         p = ConfigParameter(name='param1')
         db.add_param(p)
         loader = self.getloader()
@@ -155,7 +159,7 @@ class TestCliLoader(unittest.TestCase):
     def test_load_choice(self):
         good = ['c1', 'c3', 'c2']
         choices = ('c0', 'c1', 'c2', 'c3')
-        db = self.getdb()
+        db = getdb()
         p = ConfigParameter(name='param1', defaults='c1', choices=choices)
         db.add_param(p)
         loader = self.getloader(generate_default=True)
@@ -171,12 +175,10 @@ class TestCliLoader(unittest.TestCase):
         with self.assertRaises(SystemExit) as se:
             loader.load(db, ['--param1', 'no-good'])
         self.assertEqual(se.exception.code, 2)
-        
-
             
     def test_load_true(self):
         cli_opts = {'action':'store_true'}
-        db = self.getdb()
+        db = getdb()
         p = ConfigParameter(name='param1', loader_opts={'cli':cli_opts})
         db.add_param(p)
         loader = self.getloader()
@@ -187,7 +189,7 @@ class TestCliLoader(unittest.TestCase):
 
     def test_load_false(self):
         cli_opts = {'action':'store_false'}
-        db = self.getdb()
+        db = getdb()
         p = ConfigParameter(name='param1', loader_opts={'cli':cli_opts})
         db.add_param(p)
         loader = self.getloader()
@@ -198,7 +200,7 @@ class TestCliLoader(unittest.TestCase):
 
     def test_load_count(self):
         cli_opts = {'action':'count'}
-        db = self.getdb()
+        db = getdb()
         p = ConfigParameter(name='d', defaults=0, loader_opts={'cli':cli_opts})
         db.add_param(p)
         loader = self.getloader(generate_default=True)
@@ -212,6 +214,67 @@ class TestCliLoader(unittest.TestCase):
         ans = loader.load(db, ['-'+'d'*c])
         self.assertEqual(getattr(ans, p.name), c)
 
-    class TestDefaultValueLoader(unittest.TestCase):
-        pass
+class TestDefaultValueLoader(unittest.TestCase):
+    def getloader(self, platform=None):
+        return DefaultValueLoader(platform)
+
+    def test_load_plain_def(self):
+        loader = self.getloader()
+        db = getdb()
+        p = ConfigParameter(name='intparam', defaults=0)
+        db.add_param(p)
+        p = ConfigParameter(name='strparam', defaults='blah blah blah')
+        db.add_param(p)
+        p = ConfigParameter(name='noneparam')
+        db.add_param(p)
+        ans = loader.load(db)
+        self.assertEqual(ans.intparam, 0)
+        self.assertEqual(ans.strparam, 'blah blah blah')
+        self.assertIsNone(ans.noneparam)
+
+    def test_load_cur_platform(self):
+        loader = self.getloader()
+        db = getdb()
+        p = ConfigParameter(name='param', defaults={sys.platform:'myval', '*':'otherval'})
+        db.add_param(p)
+        ans = loader.load(db)
+        self.assertEqual(ans.param, 'myval')
+
+    def test_load_other_platform(self):
+        defs = {
+            'linux': 'linuxval',
+            'win': 'win32val',
+            '*': 'otherval'
+        }
+        db = getdb()
+        p = ConfigParameter(name='param', defaults=defs)
+        db.add_param(p)
+        loader = self.getloader('linux')
+        ans = loader.load(db)
+        self.assertEqual(ans.param, 'linuxval')
+        loader = self.getloader('darwin')
+        ans = loader.load(db)
+        self.assertEqual(ans.param, 'otherval')
+        loader = self.getloader('win')
+        ans = loader.load(db)
+        self.assertEqual(ans.param, 'win32val')
+
+    def test_load_with_type(self):
+        loader = self.getloader()
+        db = getdb()
+        p = ConfigParameter(name='param', type=lambda x:int(x,0), defaults='0xffff')
+        db.add_param(p)
+        ans = loader.load(db)
+        self.assertEqual(type(ans.param), int)
+        self.assertEqual(ans.param, 0xffff)
+
+    def test_load_overwrite(self):
+        loader = self.getloader()
+        db = getdb()
+        p = ConfigParameter(name='param', defaults='defval')
+        db.add_param(p)
+        ans = loader.load(db)
+        self.assertEqual(ans.param, 'defval')
+        ans.param = 'modified'
+        self.assertEqual(ans.param, 'modified')
 

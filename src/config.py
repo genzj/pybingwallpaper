@@ -153,6 +153,21 @@ class CommandLineArgumentsLoader(ConfigLoader):
         self.assemble_parser(db)
         return self.parser.parse_args(data)
 
+class DefaultValueLoader(ConfigFileLoader):
+    OPT_KEY = 'defload'
+
+    def __init__(self, platform=None):
+        self.platform = platform
+
+    def load(self, db, data=None):
+        ans = Namespace()
+        for param in db.parameters:
+            val = param.get_default(self.platform)
+            val = param.type(val) if hasattr(param, 'type') else val
+            setattr(ans, param.name, val)
+        return ans
+
+
 class JsonFileLoader(ConfigFileLoader):
     pass
 
