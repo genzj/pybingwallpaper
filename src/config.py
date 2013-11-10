@@ -48,6 +48,11 @@ class ConfigParameter:
             platform = '*'
         return self.defaults[platform]
 
+    def type_cast(self, value):
+        if hasattr(self, 'type'):
+            return self.type(value)
+        return value
+
     def __repr__(self):
         return '''{}(name={}, defaults={}, type={}, choices={}, help={}, loader_opts={})'''.format(
                         self.__class__.__name__,
@@ -83,16 +88,45 @@ class ConfigDatabase:
                 )
 
 class ConfigLoader:
-    def load(self, db, *args, **kwargs):
+    def load(self, db, generate_default=False, *args, **kwargs):
         raise NotImplemented()
 
 class ConfigDumper:
     def dump(self, db, *args, **kwargs):
         raise NotImplemented()
 
+from configparser import ConfigParser
 class ConfigFileLoader(ConfigLoader):
-    def load(self, data, db):
-        pass
+    OPT_KEY = 'conffile'
+
+    def load_value(self, param, parser, ans, generate_default):
+        opts = param.loader_opts.get(self.OPT_KEY, dict())
+        section = opts.get('section', parser.default_section)
+        if section is None: section = parser.default_section
+        key = opts.get('key', param.name)
+
+        if parser.has_option(section, key):
+            value = parser.get(section, key)
+            loaded = True
+        elif generate_default:
+            value = param.get_default()
+            loaded = True
+        else:
+            value = None
+            loaded = False
+        if loaded: value = param.type_cast(value)
+        return loaded, key, value
+
+    def load(self, db, data, generate_default=False):
+        ans = Namespace()
+        parser = ConfigParser()
+        parser.read_file(data)
+        for param in db.parameters:
+            loaded, key, value = \
+                self.load_value(param, parser, ans, generate_default)
+            if loaded:
+                setattr(ans, key, value)
+        return ans
 
 class ConfigFileDumper(ConfigDumper):
     pass
@@ -106,10 +140,9 @@ class CommandLineArgumentsLoader(ConfigLoader):
             http://docs.python.org/3/library/argparse.html#argparse.ArgumentParser.add_argument
     '''
     OPT_KEY = 'cli'
-    def __init__(self, generate_default=False):
-        self.generate_default = generate_default
 
-    def param_to_arg_opts(self, param):
+    @staticmethod
+    def param_to_arg_opts(param, generate_default):
         # load common options
         opts = {
                 'help': param.help,
@@ -118,19 +151,20 @@ class CommandLineArgumentsLoader(ConfigLoader):
         if hasattr(param, 'type'): opts['type'] = param.type
         if hasattr(param, 'choices'): opts['choices'] = param.choices
 
-        if self.generate_default:
+        if generate_default:
             opts['default'] = param.get_default()
         
         # load specific options at last so that
         # specific ones take higher priority in case a same
         # key occurs in both common part and loader_opts part
-        specific_opts = param.loader_opts.get(self.OPT_KEY, dict())
+        specific_opts = param.loader_opts.get(CommandLineArgumentsLoader.OPT_KEY, dict())
         opts.update(specific_opts)
         if 'flags' in opts: del(opts['flags'])
         return opts
 
-    def param_to_arg_flags(self, param):
-        opts = param.loader_opts.get(self.OPT_KEY, dict())
+    @staticmethod
+    def param_to_arg_flags(param):
+        opts = param.loader_opts.get(CommandLineArgumentsLoader.OPT_KEY, dict())
         if 'flags' in opts:
             ans = opts['flags']
         elif len(param.name) == 1:
@@ -141,35 +175,31 @@ class CommandLineArgumentsLoader(ConfigLoader):
             ans = ['--'+param.name,]
         return ans
 
-    def assemble_parser(self, db):
-        self.parser = argparse.ArgumentParser(prog = db.prog, description = db.description)
+    @staticmethod
+    def assemble_parser(db, generate_default):
+        parser = argparse.ArgumentParser(prog = db.prog, description = db.description)
         for param in db.parameters:
-            self.parser.add_argument(
-                    *self.param_to_arg_flags(param), 
-                    **self.param_to_arg_opts(param)
+            parser.add_argument(
+                    *CommandLineArgumentsLoader.param_to_arg_flags(param), 
+                    **CommandLineArgumentsLoader.param_to_arg_opts(param, generate_default)
             )
+        return parser
 
-    def load(self, db, data):
-        self.assemble_parser(db)
-        return self.parser.parse_args(data)
+    def load(self, db, data, generate_default=False):
+        parser = CommandLineArgumentsLoader.assemble_parser(db, generate_default)
+        return parser.parse_args(data)
 
-class DefaultValueLoader(ConfigFileLoader):
+class DefaultValueLoader(ConfigLoader):
     OPT_KEY = 'defload'
 
     def __init__(self, platform=None):
         self.platform = platform
 
-    def load(self, db, data=None):
+    def load(self, db, data=None, generate_default=True):
         ans = Namespace()
+        if not generate_default: return ans
         for param in db.parameters:
             val = param.get_default(self.platform)
             val = param.type(val) if hasattr(param, 'type') else val
             setattr(ans, param.name, val)
         return ans
-
-
-class JsonFileLoader(ConfigFileLoader):
-    pass
-
-class JsonFileDumper(ConfigFileDumper):
-    pass

@@ -10,6 +10,7 @@ from config import ConfigParameter
 from config import ConfigDatabase
 from config import CommandLineArgumentsLoader
 from config import DefaultValueLoader
+from config import ConfigFileLoader
 
 def getdb():
     return ConfigDatabase('test1', description='test desc')
@@ -98,8 +99,8 @@ class TestCliLoader(unittest.TestCase):
     def getdb(self):
         return ConfigDatabase('test1', description='test desc')
 
-    def getloader(self, generate_default=False):
-        return CommandLineArgumentsLoader(generate_default=generate_default)
+    def getloader(self):
+        return CommandLineArgumentsLoader()
 
     def test_invalid_arg(self):
         loader = self.getloader()
@@ -109,6 +110,22 @@ class TestCliLoader(unittest.TestCase):
         with self.assertRaises(SystemExit) as se:
             loader.load(db, ['--not-exist'])
         self.assertEqual(se.exception.code, 2)
+
+    def test_version(self):
+        loader = self.getloader()
+        db = getdb()
+        p = ConfigParameter(name='notused', loader_opts={'cli':{
+                'action': 'version',
+                'flags':('-v','--version'),
+                'version': 'test-version-1234'
+            }})
+        db.add_param(p)
+        with self.assertRaises(SystemExit) as se:
+            loader.load(db, ['-v'])
+        self.assertEqual(se.exception.code, 0)
+        with self.assertRaises(SystemExit) as se:
+            loader.load(db, ['--version'])
+        self.assertEqual(se.exception.code, 0)
 
     def test_name(self):
         db = getdb()
@@ -162,18 +179,18 @@ class TestCliLoader(unittest.TestCase):
         db = getdb()
         p = ConfigParameter(name='param1', defaults='c1', choices=choices)
         db.add_param(p)
-        loader = self.getloader(generate_default=True)
+        loader = self.getloader()
         # try legal ones
         for s in good:
-            ans = loader.load(db, ['--param1', s])
+            ans = loader.load(db, ['--param1', s], generate_default=True)
             self.assertEqual(getattr(ans, p.name), s)
         # test use default
-        ans = loader.load(db, [])
+        ans = loader.load(db, [], generate_default=True)
         self.assertEqual(getattr(ans, p.name), good[0])
 
         # test illegal value
         with self.assertRaises(SystemExit) as se:
-            loader.load(db, ['--param1', 'no-good'])
+            loader.load(db, ['--param1', 'no-good'], generate_default=True)
         self.assertEqual(se.exception.code, 2)
             
     def test_load_true(self):
@@ -203,15 +220,15 @@ class TestCliLoader(unittest.TestCase):
         db = getdb()
         p = ConfigParameter(name='d', defaults=0, loader_opts={'cli':cli_opts})
         db.add_param(p)
-        loader = self.getloader(generate_default=True)
-        ans = loader.load(db, ['-d'])
+        loader = self.getloader()
+        ans = loader.load(db, ['-d'], generate_default=True)
         self.assertEqual(getattr(ans, p.name), 1)
-        ans = loader.load(db, [])
+        ans = loader.load(db, [], generate_default=True)
         self.assertEqual(getattr(ans, p.name), 0)
-        ans = loader.load(db, ['-d', '-d', '-d'])
+        ans = loader.load(db, ['-d', '-d', '-d'], generate_default=True)
         self.assertEqual(getattr(ans, p.name), 3)
         c = random.randint(0, 256)
-        ans = loader.load(db, ['-'+'d'*c])
+        ans = loader.load(db, ['-'+'d'*c], generate_default=True)
         self.assertEqual(getattr(ans, p.name), c)
 
 class TestDefaultValueLoader(unittest.TestCase):
@@ -278,3 +295,93 @@ class TestDefaultValueLoader(unittest.TestCase):
         ans.param = 'modified'
         self.assertEqual(ans.param, 'modified')
 
+from io import StringIO
+class TestConfigFileLoader(unittest.TestCase):
+    def setUp(self):
+        self.config_file = StringIO('''
+[DEFAULT]
+# default section values
+topParam1 = 1
+topParam2 = "s-value"
+topParam3 = 
+
+[section1]
+secParam1 = 1 2 3
+secParam2 = 
+
+[section3]
+secParam2 = somevalue 
+    ''')
+    def getloader(self):
+        return ConfigFileLoader()
+    
+    def test_load_plain_value(self):
+        loader = self.getloader()
+        db = getdb()
+        p = ConfigParameter(name='topParam1')
+        db.add_param(p)
+        p = ConfigParameter(name='topParam2')
+        db.add_param(p)
+        p = ConfigParameter(name='topParam3')
+        db.add_param(p)
+        p = ConfigParameter(name='topParamx')
+        db.add_param(p)
+        ans = loader.load(db, self.config_file)
+        self.assertEqual(ans.topParam1, '1')
+        self.assertEqual(ans.topParam2, '"s-value"')
+        self.assertEqual(ans.topParam3, '')
+        self.assertFalse(hasattr(ans, 'topParamx'))
+
+    def test_load_type_cast(self):
+        loader = self.getloader()
+        db = getdb()
+        p = ConfigParameter(name='topParam1', type=int)
+        db.add_param(p)
+        p = ConfigParameter(name='topParam2', type=None)
+        db.add_param(p)
+        p = ConfigParameter(name='topParamx', type=float)
+        db.add_param(p)
+        ans = loader.load(db, self.config_file)
+        self.assertEqual(type(ans.topParam1), int)
+        self.assertEqual(ans.topParam1, 1)
+        self.assertEqual(type(ans.topParam2), str)
+        self.assertEqual(ans.topParam2, '"s-value"')
+        self.assertFalse(hasattr(ans, 'topParamx'))
+
+    def test_config_section(self):
+        loader = self.getloader()
+        db = getdb()
+        getSection = lambda secname: {'section': secname}
+        p = ConfigParameter(name='topParam2', loader_opts={'conffile':getSection(None)})
+        db.add_param(p)
+
+        p = ConfigParameter(name='secParam1', loader_opts={'conffile':getSection('section1')})
+        db.add_param(p)
+
+        p = ConfigParameter(name='secParam2', loader_opts={'conffile':getSection('section3')})
+        db.add_param(p)
+
+        p = ConfigParameter(name='secParamx', loader_opts={'conffile':getSection('sectionx')})
+        db.add_param(p)
+
+        ans = loader.load(db, self.config_file)
+        self.assertEqual(ans.topParam2, '"s-value"')
+        self.assertEqual(ans.secParam1, '1 2 3')
+        self.assertEqual(ans.secParam2, 'somevalue')
+        self.assertFalse(hasattr(ans, 'topParamx'))
+
+    def test_load_default(self):
+        loader = self.getloader()
+        db = getdb()
+        p = ConfigParameter(name='topParam3', defaults='def-1')
+        db.add_param(p)
+        p = ConfigParameter(
+                name='secParamx',
+                type=float, defaults='0',
+                loader_opts={'conffile':{'section':'section3'}}
+            )
+        db.add_param(p)
+        ans = loader.load(db, self.config_file, generate_default=True)
+        self.assertEqual(ans.topParam3, '')
+        self.assertEqual(type(ans.secParamx), float)
+        self.assertEqual(ans.secParamx, float(0))
