@@ -17,6 +17,7 @@ from config import Namespace
 def getdb():
     return ConfigDatabase('test1', description='test desc')
 
+# TODO: Add cases to test loader_srcs option
 class TestConfigureParameter(unittest.TestCase):
     def setUp(self):
         pass

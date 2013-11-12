@@ -1,10 +1,22 @@
 #!/usr/bin/env python3
 import log
+from log import PAGEDUMP
 import argparse
 import sys
+import io
 from argparse import Namespace
 
 _logger = log.getChild('config')
+
+def _dumpconfig(parser, level=PAGEDUMP):
+    _logger.log(level, 'a config file parsed as:')
+    for section_name, section in parser.items():
+        _logger.log(level, '  + section %s', section_name)
+        _logger.log(level, '  |')
+        for key, value in section.items():
+            _logger.log(level, '  +-- %s = %s', key, value)
+        _logger.log(level, '')
+
 
 class ConfigParameter:
     ''' 
@@ -32,6 +44,7 @@ class ConfigParameter:
         loader_opts - options specified as dict will be used by certain loaders
                       read document of loaders for available options
         '''
+        self.logger = log.getChild(self.__class__.__name__)
         self.name = str(name)
         self.validate_name()
         self.defaults = defaults if isinstance(defaults, dict) else {'*': defaults}
@@ -40,9 +53,11 @@ class ConfigParameter:
         self.help = help
         self.loader_opts = loader_opts if loader_opts is not None else dict()
         self.loader_srcs = loader_srcs if loader_srcs is not None else ['all']
+        self.logger.debug('parameter %s created', self)
 
     def validate_name(self):
         if any(map(lambda x:x.isspace(), self.name)):
+            self.logger.error('invalid name %s detected', self.name)
             raise ValueError("parameter name can't contain space")
 
     def get_default(self, platform=None):
@@ -83,6 +98,7 @@ class ConfigParameter:
 
 class ConfigDatabase:
     def __init__(self, prog, description = None, parameters = None):
+        self.logger = log.getChild(self.__class__.__name__)
         self.prog = prog
         self.description = description
         self.parameters = list(parameters) if parameters is not None else list()
@@ -90,6 +106,7 @@ class ConfigDatabase:
     def add_param(self, param):
         if param not in self.parameters:
             self.parameters.append(param)
+            self.logger.debug('parameter %s added into config db "%s"', param, self.prog)
         else:
             raise NameError('duplicated parameter name "%s" found'%(param.name,))
 
@@ -147,6 +164,7 @@ class ConfigFileLoader(ConfigLoader):
         ans = Namespace()
         parser = ConfigParser()
         parser.read_file(data)
+        _dumpconfig(parser)
         for param in db.parameters:
             if not param.support_loader(self.OPT_KEY): continue
             loaded, key, value = \
@@ -201,7 +219,12 @@ class ConfigFileDumper(ConfigDumper):
                 parser.add_section(section)
             formatter = param.get_option(self.OPT_KEY, 'formatter', str)
             parser.set(section, k, formatter(v))
+        _dumpconfig(parser)
         parser.write(buf, kwargs.get('space_around_delimiters', True))
+        if _logger.isEnabledFor(PAGEDUMP):
+            dbg_buf = io.StringIO()
+            parser.write(dbg_buf, kwargs.get('space_around_delimiters', True))
+            _logger.log(PAGEDUMP, 'output file:\n%s',dbg_buf.getvalue())
 
 
 class CommandLineArgumentsLoader(ConfigLoader):
@@ -237,9 +260,9 @@ class CommandLineArgumentsLoader(ConfigLoader):
 
     @staticmethod
     def param_to_arg_flags(param):
-        opts = param.loader_opts.get(CommandLineArgumentsLoader.OPT_KEY, dict())
-        if 'flags' in opts:
-            ans = opts['flags']
+        flags = param.get_option(CommandLineArgumentsLoader.OPT_KEY, 'flags', None)
+        if flags:
+            ans = flags
         elif len(param.name) == 1:
             # simple name like 'a' will be converted to '-a'
             ans = ['-'+param.name,]
@@ -260,6 +283,7 @@ class CommandLineArgumentsLoader(ConfigLoader):
         return parser
 
     def load(self, db, data, generate_default=False):
+        _logger.debug('parsing options %s', data)
         parser = CommandLineArgumentsLoader.assemble_parser(db, generate_default)
         return parser.parse_args(data)
 
