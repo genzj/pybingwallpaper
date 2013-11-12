@@ -11,7 +11,7 @@ class ConfigParameter:
         ConfigParameter is an abstract of configuration data which integrate config file
         and commandline-like argument data models.
     '''
-    def __init__(self, name, defaults=None, type=None, choices=None, help='', loader_opts=None):
+    def __init__(self, name, defaults=None, type=None, choices=None, help='', loader_srcs=None, loader_opts=None):
         '''
         name        - name of option.
         defaults    - default values which can be specified as a dict with keys 
@@ -26,6 +26,9 @@ class ConfigParameter:
                     ValueError will be raised if type converted value not a member of
                     not-none choices container
         help        - human readable message describe meaning of this parameter
+        loader_srcs - supported sources from which this parameter could be loaded
+                      'all' is a reserved name for all known loader sources;
+                      other source names are decided by certain loaders
         loader_opts - options specified as dict will be used by certain loaders
                       read document of loaders for available options
         '''
@@ -36,6 +39,7 @@ class ConfigParameter:
         if choices is not None: self.choices = choices
         self.help = help
         self.loader_opts = loader_opts if loader_opts is not None else dict()
+        self.loader_srcs = loader_srcs if loader_srcs is not None else ['all']
 
     def validate_name(self):
         if any(map(lambda x:x.isspace(), self.name)):
@@ -47,6 +51,16 @@ class ConfigParameter:
         if platform not in self.defaults:
             platform = '*'
         return self.defaults[platform]
+
+    def get_option(self, loader_key, option_name, default=None):
+        opts = self.loader_opts.get(loader_key, dict())
+        if option_name in opts:
+            return opts[option_name]
+        else:
+            return default
+
+    def support_loader(self, loader_name):
+        return 'all' in self.loader_srcs or loader_name in self.loader_srcs
 
     def type_cast(self, value):
         if hasattr(self, 'type'):
@@ -92,18 +106,30 @@ class ConfigLoader:
         raise NotImplemented()
 
 class ConfigDumper:
-    def dump(self, db, *args, **kwargs):
+    def dump(self, db, conf, buf, *args, **kwargs):
         raise NotImplemented()
 
 from configparser import ConfigParser
 class ConfigFileLoader(ConfigLoader):
+    '''
+    Options keyword: 'conffile'
+    Supported options can be set in ConfigParameter: 
+        section - under which section this value is saved 
+                  use the DEFAULT section if not specified
+        key     - with what name this value is saved
+        converter 
+                - a callable which converts string to desired object
+                  use type_cast of parameter if not specified
+    Ref:
+        http://docs.python.org/3/library/argparse.html#argparse.ArgumentParser.add_argument
+    '''
     OPT_KEY = 'conffile'
 
     def load_value(self, param, parser, ans, generate_default):
-        opts = param.loader_opts.get(self.OPT_KEY, dict())
-        section = opts.get('section', parser.default_section)
+        section = param.get_option(self.OPT_KEY, 'section', None)
         if section is None: section = parser.default_section
-        key = opts.get('key', param.name)
+        key = param.get_option(self.OPT_KEY, 'key', param.name)
+        converter = param.get_option(self.OPT_KEY, 'converter', param.type_cast)
 
         if parser.has_option(section, key):
             value = parser.get(section, key)
@@ -114,7 +140,7 @@ class ConfigFileLoader(ConfigLoader):
         else:
             value = None
             loaded = False
-        if loaded: value = param.type_cast(value)
+        if loaded: value = converter(value)
         return loaded, key, value
 
     def load(self, db, data, generate_default=False):
@@ -122,6 +148,7 @@ class ConfigFileLoader(ConfigLoader):
         parser = ConfigParser()
         parser.read_file(data)
         for param in db.parameters:
+            if not param.support_loader(self.OPT_KEY): continue
             loaded, key, value = \
                 self.load_value(param, parser, ans, generate_default)
             if loaded:
@@ -129,12 +156,58 @@ class ConfigFileLoader(ConfigLoader):
         return ans
 
 class ConfigFileDumper(ConfigDumper):
-    pass
+    '''
+    Options keyword: 'conffile'
+    Supported options can be set in ConfigParameter: 
+        section - under which section this value is saved 
+                  use the DEFAULT section if not specified
+        key     - with what name this value is saved.
+                  use the name of parameter if not given
+        formatter
+                - a callable which converts value to string
+                  use built-in str() if not specified
+    Ref:
+        http://docs.python.org/3/library/argparse.html#argparse.ArgumentParser.add_argument
+    '''
+    OPT_KEY = 'conffile'
+
+    def get_param_by_name(self, db, name):
+        key_comparator = lambda param: \
+                name == param.get_option(self.OPT_KEY, 'key', None)
+        name_comparator = lambda param: name == param.name
+        by_key = list(filter(key_comparator, db.parameters))
+        if len(by_key) > 1:
+            raise ValueError('More than one parameters are set with name {}'.format(name))
+        elif len(by_key) == 1:
+            return by_key[0]
+
+        by_name = list(filter(name_comparator, db.parameters))
+        if len(by_name) > 1:
+            raise ValueError('More than one parameters are set with key {}'.format(name))
+        elif len(by_name) == 1:
+            return by_name[0]
+        else:
+            return None
+
+    def dump(self, db, conf, buf, *args, **kwargs):
+        parser = ConfigParser()
+        for k, v in vars(conf).items():
+            param = self.get_param_by_name(db, k)
+            if param is None:
+                _logger.warn('ignore an unknown config %s=%s', k, v)
+            section = param.get_option(self.OPT_KEY, 'section', parser.default_section)
+            if section != parser.default_section and \
+                    not parser.has_section(section): 
+                parser.add_section(section)
+            formatter = param.get_option(self.OPT_KEY, 'formatter', str)
+            parser.set(section, k, formatter(v))
+        parser.write(buf, kwargs.get('space_around_delimiters', True))
+
 
 class CommandLineArgumentsLoader(ConfigLoader):
     '''
     Options keyword: 'cli'
-    Supported options: 
+    Supported options can be set in ConfigParameter: 
         flags - container which will be converted to CLI option flags
         other options can be found here 
             http://docs.python.org/3/library/argparse.html#argparse.ArgumentParser.add_argument
@@ -179,6 +252,7 @@ class CommandLineArgumentsLoader(ConfigLoader):
     def assemble_parser(db, generate_default):
         parser = argparse.ArgumentParser(prog = db.prog, description = db.description)
         for param in db.parameters:
+            if not param.support_loader(CommandLineArgumentsLoader.OPT_KEY): continue
             parser.add_argument(
                     *CommandLineArgumentsLoader.param_to_arg_flags(param), 
                     **CommandLineArgumentsLoader.param_to_arg_opts(param, generate_default)

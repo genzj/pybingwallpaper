@@ -11,6 +11,8 @@ from config import ConfigDatabase
 from config import CommandLineArgumentsLoader
 from config import DefaultValueLoader
 from config import ConfigFileLoader
+from config import ConfigFileDumper
+from config import Namespace
 
 def getdb():
     return ConfigDatabase('test1', description='test desc')
@@ -299,18 +301,18 @@ from io import StringIO
 class TestConfigFileLoader(unittest.TestCase):
     def setUp(self):
         self.config_file = StringIO('''
-[DEFAULT]
-# default section values
-topParam1 = 1
-topParam2 = "s-value"
-topParam3 = 
+        [DEFAULT]
+        # default section values
+        topParam1 = 1
+        topParam2 = "s-value"
+        topParam3 = 
 
-[section1]
-secParam1 = 1 2 3
-secParam2 = 
+        [section1]
+        secParam1 = 1 2 3
+        secParam2 = 
 
-[section3]
-secParam2 = somevalue 
+        [section3]
+        secParam2 = somevalue 
     ''')
     def getloader(self):
         return ConfigFileLoader()
@@ -385,3 +387,49 @@ secParam2 = somevalue
         self.assertEqual(ans.topParam3, '')
         self.assertEqual(type(ans.secParamx), float)
         self.assertEqual(ans.secParamx, float(0))
+
+class TestConfigFileDumper(unittest.TestCase):
+    def setUp(self):
+        self.conf = Namespace()
+        choices = ['cal1', 'cal2', 'cal3']
+        setattr(self.conf, 'intparam', 0x77992213)
+        setattr(self.conf, 'strparam', 'a complicat3d string#!')
+        setattr(self.conf, 'trueparam', True)
+        setattr(self.conf, 'falseparam', False)
+        setattr(self.conf, 'choiceparam', choices[1])
+        self.db = getdb()
+        p = ConfigParameter(name='intparam', type=int)
+        self.db.add_param(p)
+        p = ConfigParameter(name='strparam', type=str)
+        self.db.add_param(p)
+        p = ConfigParameter(name='trueparam', type=bool,
+                loader_opts={'conffile':{'section':'section_1'}})
+        self.db.add_param(p)
+        p = ConfigParameter(name='falseparam', type=bool,
+                loader_opts={'conffile':{
+                    'converter':lambda x: True if bool(x) and x.lower() != 'false' else False
+                    }})
+        self.db.add_param(p)
+        p = ConfigParameter(name='choiceparam', choices=choices)
+        self.db.add_param(p)
+
+    def getloader(self):
+        return ConfigFileLoader()
+
+    def getdumper(self):
+        return ConfigFileDumper()
+
+    def test_dump_config(self):
+        buf = StringIO()
+        loader = self.getloader()
+        dumper = self.getdumper()
+        ret = dumper.dump(self.db, self.conf, buf)
+        self.assertNotEqual(ret, 0)
+        buf.seek(0)
+        ans = loader.load(self.db, buf)
+        for k, v in vars(self.conf).items():
+            self.assertTrue(hasattr(ans, k))
+            self.assertEqual(type(getattr(ans, k)), type(v))
+            self.assertEqual(getattr(ans, k), v)
+        self.assertEqual(ans, self.conf)
+
