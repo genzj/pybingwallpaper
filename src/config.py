@@ -74,7 +74,7 @@ class ConfigParameter:
         else:
             return default
 
-    def support_loader(self, loader_name):
+    def is_loader_supported(self, loader_name):
         return 'all' in self.loader_srcs or loader_name in self.loader_srcs
 
     def type_cast(self, value):
@@ -166,7 +166,7 @@ class ConfigFileLoader(ConfigLoader):
         parser.read_file(data)
         _dumpconfig(parser)
         for param in db.parameters:
-            if not param.support_loader(self.OPT_KEY): continue
+            if not param.is_loader_supported(self.OPT_KEY): continue
             loaded, key, value = \
                 self.load_value(param, parser, ans, generate_default)
             if loaded:
@@ -213,6 +213,7 @@ class ConfigFileDumper(ConfigDumper):
             param = self.get_param_by_name(db, k)
             if param is None:
                 _logger.warn('ignore an unknown config %s=%s', k, v)
+            if not param.is_loader_supported(self.OPT_KEY): continue
             section = param.get_option(self.OPT_KEY, 'section', parser.default_section)
             if section != parser.default_section and \
                     not parser.has_section(section): 
@@ -275,7 +276,7 @@ class CommandLineArgumentsLoader(ConfigLoader):
     def assemble_parser(db, generate_default):
         parser = argparse.ArgumentParser(prog = db.prog, description = db.description)
         for param in db.parameters:
-            if not param.support_loader(CommandLineArgumentsLoader.OPT_KEY): continue
+            if not param.is_loader_supported(CommandLineArgumentsLoader.OPT_KEY): continue
             parser.add_argument(
                     *CommandLineArgumentsLoader.param_to_arg_flags(param), 
                     **CommandLineArgumentsLoader.param_to_arg_opts(param, generate_default)
@@ -297,6 +298,7 @@ class DefaultValueLoader(ConfigLoader):
         ans = Namespace()
         if not generate_default: return ans
         for param in db.parameters:
+            if not param.is_loader_supported(self.OPT_KEY): continue
             val = param.get_default(self.platform)
             val = param.type(val) if hasattr(param, 'type') else val
             setattr(ans, param.name, val)
