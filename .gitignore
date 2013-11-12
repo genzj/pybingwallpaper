@@ -44,6 +44,7 @@ data/*
 Session.vim
 .netrwhist
 *~
+tags
 
 # installer
 pybingwp-*.exe
