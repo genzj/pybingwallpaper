@@ -6,6 +6,7 @@ import random
 
 sys.path.append('../src')
 
+import config
 from config import ConfigParameter
 from config import ConfigDatabase
 from config import CommandLineArgumentsLoader
@@ -435,4 +436,25 @@ class TestConfigFileDumper(unittest.TestCase):
             self.assertEqual(type(getattr(ans, k)), type(v))
             self.assertEqual(getattr(ans, k), v)
         self.assertEqual(ans, self.conf)
+
+class TestOtherUtil(unittest.TestCase):
+    def test_merge(self):
+        ns1 = Namespace()
+        ns2 = Namespace()
+        ns1.param1 = 123
+        ns2.param1 = 456
+        ns1.parama = 'a'
+        ns2.paramb = ('1', 2, 's')
+        ans = config.merge_config(ns1, ns2)
+        self.assertEqual(ns1.param1, 123)
+        self.assertEqual(ns2.param1, 456)
+        self.assertEqual(ans.param1, 456)
+
+        self.assertEqual(ns1.parama, 'a')
+        self.assertFalse(hasattr(ns2, 'parama'))
+        self.assertEqual(ans.parama, 'a')
+
+        self.assertFalse(hasattr(ns1, 'paramb'))
+        self.assertEqual(ns2.paramb, ('1', 2, 's'))
+        self.assertEqual(ans.paramb, ('1', 2, 's'))
 

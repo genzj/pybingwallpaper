@@ -5,6 +5,7 @@ import argparse
 import sys
 import io
 from argparse import Namespace
+from copy import copy
 
 _logger = log.getChild('config')
 
@@ -38,7 +39,7 @@ class ConfigParameter:
                     ValueError will be raised if type converted value not a member of
                     not-none choices container
         help        - human readable message describe meaning of this parameter
-        loader_srcs - supported sources from which this parameter could be loaded
+        loader_srcs - list of supported sources from which this parameter could be loaded
                       'all' is a reserved name for all known loader sources;
                       other source names are decided by certain loaders
         loader_opts - options specified as dict will be used by certain loaders
@@ -259,6 +260,7 @@ class CommandLineArgumentsLoader(ConfigLoader):
         specific_opts = param.loader_opts.get(CommandLineArgumentsLoader.OPT_KEY, dict())
         opts.update(specific_opts)
         if 'flags' in opts: del(opts['flags'])
+        _logger.debug('options to argparser: %s', opts)
         return opts
 
     @staticmethod
@@ -272,6 +274,7 @@ class CommandLineArgumentsLoader(ConfigLoader):
         else:
             # long name like 'debug' will be converted to '--debug'
             ans = ['--'+param.name,]
+        _logger.debug('flags to argparser: %s', ans)
         return ans
 
     @staticmethod
@@ -279,6 +282,7 @@ class CommandLineArgumentsLoader(ConfigLoader):
         parser = argparse.ArgumentParser(prog = db.prog, description = db.description)
         for param in db.parameters:
             if not param.is_loader_supported(CommandLineArgumentsLoader.OPT_KEY): continue
+            _logger.debug('loading %s', param)
             parser.add_argument(
                     *CommandLineArgumentsLoader.param_to_arg_flags(param), 
                     **CommandLineArgumentsLoader.param_to_arg_opts(param, generate_default)
@@ -305,3 +309,15 @@ class DefaultValueLoader(ConfigLoader):
             val = param.type(val) if hasattr(param, 'type') else val
             setattr(ans, param.name, val)
         return ans
+
+def merge_config(config, increment):
+    _logger.debug('merge %s into original %s', increment, config)
+    ans = copy(config)
+    ans.__dict__.update(increment.__dict__)
+    _logger.debug('generate %s', ans)
+    return ans
+
+def pretty(config, sep='\n'):
+    lines = ['{} = {}'.format(str(k), str(v)) for k,v in config.__dict__.items()]
+    lines.sort()
+    return sep.join(lines)
