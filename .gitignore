@@ -48,3 +48,6 @@ tags
 
 # installer
 pybingwp-*.exe
+
+# config file
+settings.conf
