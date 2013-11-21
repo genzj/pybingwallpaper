@@ -24,8 +24,7 @@ def load_setters():
     else:
         return ['no', 'gnome3', 'gnome2']
 
-def parseargs(args):
-    global configdb
+def prepare_config_db():
     params = []
 
     setters = load_setters()
@@ -161,13 +160,7 @@ def parseargs(args):
             ))
     for p in params:
         configdb.add_param(p)
-    default_config = config.DefaultValueLoader().load(configdb)
-    cli_config = config.CommandLineArgumentsLoader().load(configdb, args)
-    _logger.info('cli arg parsed:\n\t%s', config.pretty(cli_config, '\n\t'))
-    run_config = config.merge_config(default_config, cli_config)
-    _logger.info('config parsed:\n\t%s', config.pretty(run_config, '\n\t'))
-    run_config.setter_args = ','.join(run_config.setter_args).split(',')
-    return run_config
+    return configdb
 
 def prepare_output_dir(d):
     os.makedirs(d, exist_ok=True)
@@ -297,10 +290,23 @@ def start_daemon(run_config):
     daemon.run()
     _logger.info('daemon %s exited', str(daemon))
 
+def load_config(configdb):
+    default_config = config.DefaultValueLoader().load(configdb)
+    cli_config = config.CommandLineArgumentsLoader().load(configdb, argv[1:])
+    _logger.info('cli arg parsed:\n\t%s', config.pretty(cli_config, '\n\t'))
+    run_config = config.merge_config(default_config, cli_config)
+    run_config.setter_args = ','.join(run_config.setter_args).split(',')
+    _logger.info('running config is:\n\t%s', config.pretty(run_config, '\n\t'))
+    return run_config
+
+def save_config(configdb, run_config):
+    config.to_file(configdb, run_config, 'settings.conf')
+
 if __name__ == '__main__':
-    run_config = parseargs(argv[1:])
+    configdb = prepare_config_db()
+    run_config = load_config(configdb)
     set_debug_details(run_config.debug)
-    _logger.debug(run_config)
+    #save_config(configdb, run_config)
     if run_config.background:
         start_daemon(run_config)
     else:
