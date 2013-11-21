@@ -53,14 +53,14 @@ def prepare_config_db():
                 }}
             ))
 
-    params.append(config.ConfigParameter('generate_config_file',
+    params.append(config.ConfigParameter('generate_config',
             defaults = False,
             help='''generate a configuration file with default configuration
             and exit. path and name of configuration file can be specified with
             --config-file''',
             loader_srcs=['cli', 'defload'],
             loader_opts={'cli':{
-                'flags':('--generate-config-file',),
+                'flags':('--generate-config',),
                 'action':'store_true'
                 }}
             ))
@@ -168,6 +168,8 @@ def prepare_config_db():
             loader_opts={'cli':{
                 'flags':('--setter-args',),
                 'action':'append',
+                }, 'conffile':{
+                'formatter':lambda args: ','.join(args)
                 }}
             ))
 
@@ -327,6 +329,9 @@ def load_config(configdb, args = None):
     _logger.info('cli arg parsed:\n\t%s', config.pretty(cli_config, '\n\t'))
     run_config = config.merge_config(default_config, cli_config)
 
+    if run_config.generate_config:
+        generate_default_config(configdb, run_config.config_file)
+
     conf_config = config.from_file(configdb, run_config.config_file)
     _logger.info('config file parsed:\n\t%s', config.pretty(conf_config, '\n\t'))
     run_config = config.merge_config(run_config, conf_config)
@@ -334,13 +339,21 @@ def load_config(configdb, args = None):
     # override saved settings again with cli options again, because we want
     # command line options to take higher priority
     run_config = config.merge_config(run_config, cli_config)
-    run_config.setter_args = ','.join(run_config.setter_args).split(',')
+    if run_config.setter_args:
+        run_config.setter_args = ','.join(run_config.setter_args).split(',')
+    else:
+        run_config.setter_args = list()
     _logger.info('running config is:\n\t%s', config.pretty(run_config, '\n\t'))
     return run_config
 
 def save_config(configdb, run_config, filename=None):
-    filename = run_config.config_file
+    filename = run_config.config_file if not filename else filename
     config.to_file(configdb, run_config, filename)
+
+def generate_default_config(configdb, filename):
+    default_config = config.DefaultValueLoader().load(configdb)
+    save_config(configdb, default_config, filename)
+    sysexit(0)
 
 if __name__ == '__main__':
     configdb = prepare_config_db()
