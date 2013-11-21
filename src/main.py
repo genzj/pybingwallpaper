@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import argparse
 from sys import argv, exit as sysexit, platform
 import os
 from os.path import expanduser, join as pathjoin, isdir, splitext
@@ -10,7 +9,7 @@ import bingwallpaper
 import record
 import setter
 import sched
-import time
+import config
 
 NAME = 'pybingwallpaper'
 REV  = '1.4.0'
@@ -26,18 +25,34 @@ def load_setters():
         return ['no', 'gnome3', 'gnome2']
 
 def parseargs(args):
+    global configdb
+    params = []
+
     setters = load_setters()
-    parser = argparse.ArgumentParser(prog=NAME,
+
+    configdb = config.ConfigDatabase(prog=NAME, 
             description='Download the wallpaper offered by Bing.com '
             +'and set it current wallpaper background.')
-    parser.add_argument('-v', '--version', action='version',
-            version='%(prog)s-{} ({})'.format(REV, LINK),
-            help='show version information')
-    parser.add_argument('-b', '--background', default=False,
-            action='store_true',
+    
+    params.append(config.ConfigParameter('version',
+            help='show version information',
+            loader_srcs=['cli'],
+            loader_opts={'cli':{
+                'flags':('-v', '--version'),
+                'action': 'version',
+                'version':'%(prog)s-{} ({})'.format(REV, LINK),
+                }}
+            ))
+    params.append(config.ConfigParameter('background',
+            defaults=False,
             help='''work in background (daemon mode) and check
-            wallpaper periodically (interval can be set by --interval).''')
-    parser.add_argument('-c', '--country', default=None,
+            wallpaper periodically (interval can be set by --interval).''',
+            loader_opts={'cli':{
+                'flags':('-b', '--background'),
+                'action':'store_true',
+                }}
+            ))
+    params.append(config.ConfigParameter('country', defaults=None,
             choices=('au', 'br', 'ca', 'cn', 'de', 'fr', 'jp', 'nz', 'us', 'uk'), 
             help='''select country code sent to bing.com.
             bing.com in different countries may show different
@@ -45,25 +60,39 @@ def parseargs(args):
             au: Australia  br: Brazil  ca: Canada  cn: China  de:Germany
             fr: France  jp: Japan  nz: Netherland  us: USA  uk: United Kingdom
             Note: only China(cn), Netherland(nz) and USA(us) have
-            high resolution (1920x1200) wallpapers; the rest offer 1366x768 only.''')
-    parser.add_argument('-d', '--debug', default=0,
-            action='count',
+            high resolution (1920x1200) wallpapers; the rest offer 1366x768 only.''',
+            loader_opts={'cli':{
+                'flags':('-c', '--country'),
+                }}
+            ))
+    params.append(config.ConfigParameter('debug', defaults=0,
             help='''enable debug outputs. 
-            The more --debug the more detailed the log will be''')
-    parser.add_argument('-f', '--force', default=False,
-            action='store_true',
-            help='''obsolete since 1.3.0''')
-    parser.add_argument('-i', '--interval', type=int, default=2,
+            The more --debug the more detailed the log will be''',
+            loader_opts={'cli':{
+                'flags':('-d', '--debug'),
+                'action':'count',
+                }}
+            ))
+    params.append(config.ConfigParameter('interval', type=int, defaults=2,
             help='''interval between each two wallpaper checkings 
                     in unit of hours. applicable only in `background` mode.
-                    2 hours by default.''')
-    parser.add_argument('-k', '--keep-file-name', default=False,
-            action='store_true',
+                    2 hours by default.''',
+            loader_opts={'cli':{
+                'flags':('-i', '--interval'),
+                }}
+            ))
+    params.append(config.ConfigParameter('keep_file_name', defaults=False,
             help='''keep the original filename. By default
             downloaded file will be renamed as 'wallpaper.jpg'.
             Keep file name will retain all downloaded photos
-            ''')
-    parser.add_argument('-m', '--size-mode', default='prefer',
+            ''',
+            loader_opts={'cli':{
+                'flags':('-k', '--keep-file-name'),
+                'action':'store_true',
+                }}
+            ))
+
+    params.append(config.ConfigParameter('size_mode', defaults='prefer',
             choices=('prefer', 'insist', 'never'),
             help='''set selecting strategy when wallpapers in different 
                     size are available (normally 1920x1200 and 1366x768).
@@ -74,41 +103,71 @@ def parseargs(args):
                     normal size wallpapers, if `insist` is adopted
                     with those sites, no wallpaper can be downloaded,
                     see `--country` for more);
-                    `never` always use normal resolution.'''
-            )
-    parser.add_argument('-o','--offset', type=int, default='0',
+                    `never` always use normal resolution.''',
+            loader_opts={'cli':{
+                'flags':('-m', '--size-mode'),
+                }}
+            ))
+    params.append(config.ConfigParameter('offset', type=int, defaults='0',
             help='''start downloading from the photo of 'N' days ago.
-                    specify 0 to download photo of today.''')
-    parser.add_argument('--persistence', type=int, default='3',
-            help='''obsolete since 1.3.0''')
-    parser.add_argument('--redownload', default=False,
-            action='store_true',
+                    specify 0 to download photo of today.''',
+            loader_opts={'cli':{
+                'flags':('-o', '--offset'),
+                }}
+            ))
+
+    params.append(config.ConfigParameter('redownload', defaults=False,
             help='''do not check history records. Download
                     must be done. downloaded picture will still
                     be recorded in history file.
-            ''')
-    parser.add_argument('-s', '--setter', choices=setters,
-            default=setters[1],
+            ''',
+            loader_opts={'cli':{
+                'action':'store_true',
+                }}
+            ))
+    params.append(config.ConfigParameter('setter', choices=setters,
+            defaults=setters[1],
             help='''specify interface to be called for
                     setting wallpaper. 'no'
                     indicates downloading-only; 'gnome2/3'
                     are only for Linux with gnome; 'win' is
                     for Windows only. Customized setter can
                     be added as dev doc described. Default: {}
-            '''.format(setters[1]))
-    parser.add_argument('--setter-args', default=[], action='append',
-            help='''arguments for external setters''')
-    parser.add_argument('-t', '--output-folder',
-            default=pathjoin(expanduser('~'), 'MyBingWallpapers'),
+            '''.format(setters[1]),
+            loader_opts={'cli':{
+                'flags':('-s', '--setter'),
+                }}
+            ))
+
+    params.append(config.ConfigParameter('setter_args', defaults=[],
+            help='''arguments for external setters''',
+            loader_opts={'cli':{
+                'flags':('--setter-args',),
+                'action':'append',
+                }}
+            ))
+
+    params.append(config.ConfigParameter('output_folder',
+            defaults=pathjoin(expanduser('~'), 'MyBingWallpapers'),
             help='''specify the folder to store photos.
                     Use '~/MyBingWallpapers' folder in Linux, 
                     'C:/Documents and Settings/<your-username>/MyBingWallpapers 
                     in Windows XP or 'C:/Users/<your-username>/MyBingWallpapers' 
                     in Windows 7 by default
-                ''')
-    config = parser.parse_args(args)
-    config.setter_args = ','.join(config.setter_args).split(',')
-    return config
+                ''',
+            loader_opts={'cli':{
+                'flags':('-t', '--output-folder'),
+                }}
+            ))
+    for p in params:
+        configdb.add_param(p)
+    default_config = config.DefaultValueLoader().load(configdb)
+    cli_config = config.CommandLineArgumentsLoader().load(configdb, args)
+    _logger.info('cli arg parsed:\n\t%s', config.pretty(cli_config, '\n\t'))
+    run_config = config.merge_config(default_config, cli_config)
+    _logger.info('config parsed:\n\t%s', config.pretty(run_config, '\n\t'))
+    run_config.setter_args = ','.join(run_config.setter_args).split(',')
+    return run_config
 
 def prepare_output_dir(d):
     os.makedirs(d, exist_ok=True)
@@ -117,14 +176,14 @@ def prepare_output_dir(d):
     else:
         _logger.critical('can not create output folder %s', d)
 
-def download_wallpaper(config):
-    idx = config.offset
+def download_wallpaper(run_config):
+    idx = run_config.offset
     s = bingwallpaper.BingWallpaperPage(idx, 
-                                        country_code = config.country,
-                                        high_resolution = bingwallpaper.HighResolutionSetting.getByName(
-                                                            config.size_mode
-                                                            )
-                                        )
+            country_code = run_config.country,
+            high_resolution = bingwallpaper.HighResolutionSetting.getByName(
+                run_config.size_mode
+                )
+            )
 
     _logger.debug(repr(s))
     s.load()
@@ -134,11 +193,11 @@ def download_wallpaper(config):
         return None
     for wplink, info in s.image_links():
         if wplink:
-            outfile = get_output_filename(config, wplink)
+            outfile = get_output_filename(run_config, wplink)
             rec = record.default_manager.get(wplink, None)
 
             if rec and outfile == rec['local_file']:
-                if not config.redownload:
+                if not run_config.redownload:
                     _logger.info('file has been downloaded before, exit')
                     return None
                 else:
@@ -160,11 +219,11 @@ def download_wallpaper(config):
     _logger.info('bad luck, no wallpaper today:(')
     return None
 
-def get_output_filename(config, link):
+def get_output_filename(run_config, link):
     filename = basename(link)
-    if not config.keep_file_name:
+    if not run_config.keep_file_name:
         filename = 'wallpaper{}'.format(splitext(filename)[1])
-    return pathjoin(config.output_folder, filename)
+    return pathjoin(run_config.output_folder, filename)
 
 def load_history():
     try:
@@ -200,50 +259,50 @@ def set_debug_details(level):
         l = log.PAGEDUMP
     log.setDebugLevel(l)
 
-def main(config, daemon=None):
+def main(run_config, daemon=None):
     if daemon: _logger.info('daemon %s triggers an update', str(daemon))
     setter.load_ext_setters(dirname(abspath(argv[0])))
 
-    prepare_output_dir(config.output_folder)
+    prepare_output_dir(run_config.output_folder)
 
     load_history()
-    filerecord = download_wallpaper(config)
+    filerecord = download_wallpaper(run_config)
 
     if filerecord:
         save_history(filerecord)
-    if not filerecord or config.setter == 'no':
+    if not filerecord or run_config.setter == 'no':
         _logger.info('nothing to set')
     else:
-        s = setter.get(config.setter)()
+        s = setter.get(run_config.setter)()
         _logger.info('setting wallpaper %s', filerecord['local_file'])
-        s.set(filerecord['local_file'], config.setter_args)
+        s.set(filerecord['local_file'], run_config.setter_args)
         _logger.info('all done. enjoy your new wallpaper')
 
-    if daemon: schedule_next_poll(config, daemon)
+    if daemon: schedule_next_poll(run_config, daemon)
 
-def schedule_next_poll(config, daemon):
-    if config.background and daemon:
-        _logger.debug('schedule next running in %d seconds', config.interval*3600)
-        daemon.enter(config.interval*3600, 1, main, (config, daemon))
-    elif not config.background:
+def schedule_next_poll(run_config, daemon):
+    if run_config.background and daemon:
+        _logger.debug('schedule next running in %d seconds', run_config.interval*3600)
+        daemon.enter(run_config.interval*3600, 1, main, (run_config, daemon))
+    elif not run_config.background:
         _logger.error('not in daemon mode')
     elif not daemon:
         _logger.error('no scheduler')
 
-def start_daemon(config):
+def start_daemon(run_config):
     daemon = sched.scheduler()
     
-    main(config, daemon)
+    main(run_config, daemon)
     _logger.info('daemon %s is running', str(daemon))
     daemon.run()
     _logger.info('daemon %s exited', str(daemon))
 
 if __name__ == '__main__':
-    config = parseargs(argv[1:])
-    set_debug_details(config.debug)
-    _logger.debug(config)
-    if config.background:
-        start_daemon(config)
+    run_config = parseargs(argv[1:])
+    set_debug_details(run_config.debug)
+    _logger.debug(run_config)
+    if run_config.background:
+        start_daemon(run_config)
     else:
-        main(config, None)
+        main(run_config, None)
     sysexit(0)
