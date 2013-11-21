@@ -54,7 +54,7 @@ def prepare_config_db():
             ))
 
     params.append(config.ConfigParameter('generate_config',
-            defaults = False,
+            defaults=False,
             help='''generate a configuration file with default configuration
             and exit. path and name of configuration file can be specified with
             --config-file''',
@@ -74,13 +74,14 @@ def prepare_config_db():
                 'action':'store_true',
                 }}
             ))
-    params.append(config.ConfigParameter('country', defaults=None,
-            choices=('au', 'br', 'ca', 'cn', 'de', 'fr', 'jp', 'nz', 'us', 'uk'), 
+    params.append(config.ConfigParameter('country', defaults='auto',
+            choices=('au', 'br', 'ca', 'cn', 'de', 'fr', 'jp', 'nz', 'us', 'uk', 'auto'), 
             help='''select country code sent to bing.com.
             bing.com in different countries may show different
             backgrounds. 
             au: Australia  br: Brazil  ca: Canada  cn: China  de:Germany
             fr: France  jp: Japan  nz: Netherland  us: USA  uk: United Kingdom
+            auto: select country according to your IP address (by Bing.com)
             Note: only China(cn), Netherland(nz) and USA(us) have
             high resolution (1920x1200) wallpapers; the rest offer 1366x768 only.''',
             loader_opts={'cli':{
@@ -198,8 +199,9 @@ def prepare_output_dir(d):
 
 def download_wallpaper(run_config):
     idx = run_config.offset
+    country_code = None if run_config.country == 'auto' else run_config.country
     s = bingwallpaper.BingWallpaperPage(idx, 
-            country_code = run_config.country,
+            country_code = country_code,
             high_resolution = bingwallpaper.HighResolutionSetting.getByName(
                 run_config.size_mode
                 )
