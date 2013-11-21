@@ -334,7 +334,12 @@ def load_config(configdb, args = None):
     if run_config.generate_config:
         generate_default_config(configdb, run_config.config_file)
 
-    conf_config = config.from_file(configdb, run_config.config_file)
+    try:
+        conf_config = config.from_file(configdb, run_config.config_file)
+    except config.ConfigFileLoader.ConfigValueError as err:
+        _logger.error(err)
+        sysexit(1)
+
     _logger.info('config file parsed:\n\t%s', config.pretty(conf_config, '\n\t'))
     run_config = config.merge_config(run_config, conf_config)
 

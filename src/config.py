@@ -142,6 +142,7 @@ class ConfigFileLoader(ConfigLoader):
         http://docs.python.org/3/library/argparse.html#argparse.ArgumentParser.add_argument
     '''
     OPT_KEY = 'conffile'
+    class ConfigValueError(ValueError):pass
 
     def load_value(self, param, parser, ans, generate_default):
         section = param.get_option(self.OPT_KEY, 'section', None)
@@ -158,7 +159,13 @@ class ConfigFileLoader(ConfigLoader):
         else:
             value = None
             loaded = False
-        if loaded: value = converter(value)
+        if loaded: 
+            value = converter(value)
+            if hasattr(param, 'choices') and value not in param.choices:
+                raise ConfigFileLoader.ConfigValueError(
+                        "config setting %s/%s: invalid choice: %s (choose from %s)" % (
+                            section, key, value, ", ".join(param.choices))
+                        )
         return loaded, key, value
 
     def load(self, db, data, generate_default=False):
