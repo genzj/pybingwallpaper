@@ -42,6 +42,29 @@ def prepare_config_db():
                 'version':'%(prog)s-{} ({})'.format(REV, LINK),
                 }}
             ))
+
+    #TODO need to generate configuration path according to program path
+    params.append(config.ConfigParameter('config_file',
+            defaults = 'settings.conf',
+            help='specify configuration file',
+            loader_srcs=['cli', 'defload'],
+            loader_opts={'cli':{
+                'flags':('--config-file',),
+                }}
+            ))
+
+    params.append(config.ConfigParameter('generate_config_file',
+            defaults = False,
+            help='''generate a configuration file with default configuration
+            and exit. path and name of configuration file can be specified with
+            --config-file''',
+            loader_srcs=['cli', 'defload'],
+            loader_opts={'cli':{
+                'flags':('--generate-config-file',),
+                'action':'store_true'
+                }}
+            ))
+
     params.append(config.ConfigParameter('background',
             defaults=False,
             help='''work in background (daemon mode) and check
@@ -70,6 +93,8 @@ def prepare_config_db():
             loader_opts={'cli':{
                 'flags':('-d', '--debug'),
                 'action':'count',
+                }, 'conffile': {
+                'converter':int
                 }}
             ))
     params.append(config.ConfigParameter('interval', type=int, defaults=2,
@@ -290,23 +315,37 @@ def start_daemon(run_config):
     daemon.run()
     _logger.info('daemon %s exited', str(daemon))
 
-def load_config(configdb):
+def load_config(configdb, args = None):
+    args = argv[1:] if args is None else args
+    set_debug_details(args.count('--debug')+args.count('-d'))
+
     default_config = config.DefaultValueLoader().load(configdb)
+    _logger.info('default config:\n\t%s', config.pretty(default_config, '\n\t'))
+
+    # parse cli options at first because we need the config file path in it
     cli_config = config.CommandLineArgumentsLoader().load(configdb, argv[1:])
     _logger.info('cli arg parsed:\n\t%s', config.pretty(cli_config, '\n\t'))
     run_config = config.merge_config(default_config, cli_config)
+
+    conf_config = config.from_file(configdb, run_config.config_file)
+    _logger.info('config file parsed:\n\t%s', config.pretty(conf_config, '\n\t'))
+    run_config = config.merge_config(run_config, conf_config)
+
+    # override saved settings again with cli options again, because we want
+    # command line options to take higher priority
+    run_config = config.merge_config(run_config, cli_config)
     run_config.setter_args = ','.join(run_config.setter_args).split(',')
     _logger.info('running config is:\n\t%s', config.pretty(run_config, '\n\t'))
     return run_config
 
-def save_config(configdb, run_config):
-    config.to_file(configdb, run_config, 'settings.conf')
+def save_config(configdb, run_config, filename=None):
+    filename = run_config.config_file
+    config.to_file(configdb, run_config, filename)
 
 if __name__ == '__main__':
     configdb = prepare_config_db()
     run_config = load_config(configdb)
     set_debug_details(run_config.debug)
-    #save_config(configdb, run_config)
     if run_config.background:
         start_daemon(run_config)
     else:

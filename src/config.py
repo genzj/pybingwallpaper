@@ -321,3 +321,14 @@ def pretty(config, sep='\n'):
     lines = ['{} = {}'.format(str(k), str(v)) for k,v in config.__dict__.items()]
     lines.sort()
     return sep.join(lines)
+
+def to_file(db, config, filename, dumper = None):
+    dumper = ConfigFileDumper() if not dumper else dumper
+    with open(filename, 'w', encoding='utf-8') as outf:
+        dumper.dump(db, config, outf)
+
+def from_file(db, filename, loader = None):
+    loader = ConfigFileLoader() if not loader else loader
+    with open(filename, 'r', encoding='utf-8') as inf:
+        return loader.load(db, inf)
+
