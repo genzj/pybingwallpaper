@@ -72,6 +72,8 @@ def prepare_config_db():
             loader_opts={'cli':{
                 'flags':('-b', '--background'),
                 'action':'store_true',
+                }, 'conffile':{
+                'section':'DEFAULT',
                 }}
             ))
     params.append(config.ConfigParameter('country', defaults='auto',
@@ -86,6 +88,8 @@ def prepare_config_db():
             high resolution (1920x1200) wallpapers; the rest offer 1366x768 only.''',
             loader_opts={'cli':{
                 'flags':('-c', '--country'),
+                }, 'conffile':{
+                'section':'DEFAULT',
                 }}
             ))
     params.append(config.ConfigParameter('debug', defaults=0,
@@ -104,6 +108,8 @@ def prepare_config_db():
                     2 hours by default.''',
             loader_opts={'cli':{
                 'flags':('-i', '--interval'),
+                }, 'conffile':{
+                'section':'DEFAULT',
                 }}
             ))
     params.append(config.ConfigParameter('keep_file_name', defaults=False,
@@ -114,6 +120,8 @@ def prepare_config_db():
             loader_opts={'cli':{
                 'flags':('-k', '--keep-file-name'),
                 'action':'store_true',
+                }, 'conffile':{
+                'section':'DEFAULT',
                 }}
             ))
 
@@ -131,6 +139,8 @@ def prepare_config_db():
                     `never` always use normal resolution.''',
             loader_opts={'cli':{
                 'flags':('-m', '--size-mode'),
+                }, 'conffile':{
+                'section':'DEFAULT',
                 }}
             ))
     params.append(config.ConfigParameter('offset', type=int, defaults='0',
@@ -138,6 +148,8 @@ def prepare_config_db():
                     specify 0 to download photo of today.''',
             loader_opts={'cli':{
                 'flags':('-o', '--offset'),
+                }, 'conffile':{
+                'section':'DEFAULT',
                 }}
             ))
 
@@ -148,6 +160,8 @@ def prepare_config_db():
             ''',
             loader_opts={'cli':{
                 'action':'store_true',
+                }, 'conffile':{
+                'section':'DEFAULT',
                 }}
             ))
     params.append(config.ConfigParameter('setter', choices=setters,
@@ -161,6 +175,8 @@ def prepare_config_db():
             '''.format(setters[1]),
             loader_opts={'cli':{
                 'flags':('-s', '--setter'),
+                }, 'conffile':{
+                'section':'DEFAULT',
                 }}
             ))
 
@@ -170,7 +186,8 @@ def prepare_config_db():
                 'flags':('--setter-args',),
                 'action':'append',
                 }, 'conffile':{
-                'formatter':lambda args: ','.join(args)
+                'formatter':lambda args: ','.join(args),
+                'section':'DEFAULT',
                 }}
             ))
 
@@ -184,6 +201,8 @@ def prepare_config_db():
                 ''',
             loader_opts={'cli':{
                 'flags':('-t', '--output-folder'),
+                }, 'conffile':{
+                'section':'DEFAULT',
                 }}
             ))
     for p in params:
