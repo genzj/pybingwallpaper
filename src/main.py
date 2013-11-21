@@ -352,6 +352,9 @@ def save_config(configdb, run_config, filename=None):
 
 def generate_default_config(configdb, filename):
     default_config = config.DefaultValueLoader().load(configdb)
+    _logger.info('save default config to file %s:\n\t%s', 
+            filename, 
+            config.pretty(default_config, '\n\t'))
     save_config(configdb, default_config, filename)
     sysexit(0)
 
