@@ -250,6 +250,8 @@ class CommandLineArgumentsLoader(ConfigLoader):
 
         if generate_default:
             opts['default'] = param.get_default()
+        else:
+            opts['default'] = argparse.SUPPRESS
         
         # load specific options at last so that
         # specific ones take higher priority in case a same

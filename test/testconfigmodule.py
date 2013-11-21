@@ -199,23 +199,25 @@ class TestCliLoader(unittest.TestCase):
     def test_load_true(self):
         cli_opts = {'action':'store_true'}
         db = getdb()
-        p = ConfigParameter(name='param1', loader_opts={'cli':cli_opts})
+        p = ConfigParameter(name='param1', defaults=False, loader_opts={'cli':cli_opts})
         db.add_param(p)
         loader = self.getloader()
         ans = loader.load(db, ['--param1'])
         self.assertTrue(getattr(ans, p.name))
         ans = loader.load(db, [])
+        self.assertFalse(hasattr(ans, p.name))
+        ans = loader.load(db, [], generate_default=True)
         self.assertFalse(getattr(ans, p.name))
 
     def test_load_false(self):
         cli_opts = {'action':'store_false'}
         db = getdb()
-        p = ConfigParameter(name='param1', loader_opts={'cli':cli_opts})
+        p = ConfigParameter(name='param1', defaults=True, loader_opts={'cli':cli_opts})
         db.add_param(p)
         loader = self.getloader()
         ans = loader.load(db, ['--param1'])
         self.assertFalse(getattr(ans, p.name))
-        ans = loader.load(db, [])
+        ans = loader.load(db, [], generate_default=True)
         self.assertTrue(getattr(ans, p.name))
 
     def test_load_count(self):
