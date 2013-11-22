@@ -73,7 +73,8 @@ def prepare_config_db():
                 'flags':('-b', '--background'),
                 'action':'store_true',
                 }, 'conffile':{
-                'section':'DEFAULT',
+                'section':'Daemon',
+                'converter':config.str_to_bool,
                 }}
             ))
     params.append(config.ConfigParameter('country', defaults='auto',
@@ -89,7 +90,7 @@ def prepare_config_db():
             loader_opts={'cli':{
                 'flags':('-c', '--country'),
                 }, 'conffile':{
-                'section':'DEFAULT',
+                'section':'Download',
                 }}
             ))
     params.append(config.ConfigParameter('debug', defaults=0,
@@ -99,7 +100,8 @@ def prepare_config_db():
                 'flags':('-d', '--debug'),
                 'action':'count',
                 }, 'conffile': {
-                'converter':int
+                'converter':int,
+                'section':'Debug',
                 }}
             ))
     params.append(config.ConfigParameter('interval', type=int, defaults=2,
@@ -109,7 +111,7 @@ def prepare_config_db():
             loader_opts={'cli':{
                 'flags':('-i', '--interval'),
                 }, 'conffile':{
-                'section':'DEFAULT',
+                'section':'Daemon',
                 }}
             ))
     params.append(config.ConfigParameter('keep_file_name', defaults=False,
@@ -121,7 +123,8 @@ def prepare_config_db():
                 'flags':('-k', '--keep-file-name'),
                 'action':'store_true',
                 }, 'conffile':{
-                'section':'DEFAULT',
+                'section':'Download',
+                'converter':config.str_to_bool,
                 }}
             ))
 
@@ -140,7 +143,7 @@ def prepare_config_db():
             loader_opts={'cli':{
                 'flags':('-m', '--size-mode'),
                 }, 'conffile':{
-                'section':'DEFAULT',
+                'section':'Download',
                 }}
             ))
     params.append(config.ConfigParameter('offset', type=int, defaults='0',
@@ -149,7 +152,7 @@ def prepare_config_db():
             loader_opts={'cli':{
                 'flags':('-o', '--offset'),
                 }, 'conffile':{
-                'section':'DEFAULT',
+                'section':'Download',
                 }}
             ))
 
@@ -161,7 +164,8 @@ def prepare_config_db():
             loader_opts={'cli':{
                 'action':'store_true',
                 }, 'conffile':{
-                'section':'DEFAULT',
+                'section':'Download',
+                'converter':config.str_to_bool
                 }}
             ))
     params.append(config.ConfigParameter('setter', choices=setters,
@@ -176,7 +180,7 @@ def prepare_config_db():
             loader_opts={'cli':{
                 'flags':('-s', '--setter'),
                 }, 'conffile':{
-                'section':'DEFAULT',
+                'section':'Setter',
                 }}
             ))
 
@@ -187,7 +191,7 @@ def prepare_config_db():
                 'action':'append',
                 }, 'conffile':{
                 'formatter':lambda args: ','.join(args),
-                'section':'DEFAULT',
+                'section':'Setter',
                 }}
             ))
 
@@ -202,7 +206,7 @@ def prepare_config_db():
             loader_opts={'cli':{
                 'flags':('-t', '--output-folder'),
                 }, 'conffile':{
-                'section':'DEFAULT',
+                'section':'Download',
                 }}
             ))
     for p in params:

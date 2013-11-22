@@ -18,6 +18,7 @@ def _dumpconfig(parser, level=PAGEDUMP):
             _logger.log(level, '  +-- %s = %s', key, value)
         _logger.log(level, '')
 
+str_to_bool = lambda x: True if bool(x) and x.lower() != 'false' else False
 
 class ConfigParameter:
     ''' 
@@ -325,7 +326,7 @@ def merge_config(config, increment):
     return ans
 
 def pretty(config, sep='\n'):
-    lines = ['{} = {}'.format(str(k), str(v)) for k,v in config.__dict__.items()]
+    lines = ['{} = {}'.format(str(k), repr(v)) for k,v in config.__dict__.items()]
     lines.sort()
     return sep.join(lines)
 
