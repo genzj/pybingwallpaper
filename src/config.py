@@ -334,6 +334,7 @@ def to_file(db, config, filename, dumper = None):
     dumper = ConfigFileDumper() if not dumper else dumper
     with open(filename, 'w', encoding='utf-8') as outf:
         dumper.dump(db, config, outf)
+        outf.flush()
 
 def from_file(db, filename, loader = None):
     loader = ConfigFileLoader() if not loader else loader
