@@ -27,8 +27,8 @@ You can also append arguments in *Command* box.
 
 #### Windows
 
-Download installer [from dropbox](https://www.dropbox.com/s/tszcm0dac1tn70y/pybingwp-1-4-0.exe) 
-or from [Baidu Disk(百度盘)](http://pan.baidu.com/s/1bnaMORt) 
+Download installer [from dropbox](https://www.dropbox.com/s/3h3xfpfdcwrg34r/pybingwp-1-4-1.exe) 
+or from [Baidu Disk(百度盘)](http://pan.baidu.com/s/1c07oPos) 
 and install it. A shortcut will be created in your startup folder. 
 
 You can edit the configuration to adjust features.
@@ -137,6 +137,9 @@ You can edit the configuration to adjust features.
 ----------
 
 ### Release Note
+* **2013-12-21 1.4.1**
+    * Background mode bugfix
+
 * **2013-12-21 1.4.0**
     * Use configuration file;
     * Support specify market

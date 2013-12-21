@@ -384,7 +384,7 @@ def main(daemon=None):
 def schedule_next_poll(run_config, daemon):
     if not run_config.foreground and run_config.background and daemon:
         _logger.debug('schedule next running in %d seconds', run_config.interval*3600)
-        daemon.enter(run_config.interval*3600, 1, main, (run_config, daemon))
+        daemon.enter(run_config.interval*3600, 1, main, (daemon, ))
     elif run_config.foreground:
         _logger.info('force foreground mode from command line')
     elif not run_config.background:
