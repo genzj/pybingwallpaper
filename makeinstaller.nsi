@@ -24,7 +24,7 @@
 Name ${PROGRAM_NAME}
 
 ; The file to write
-OutFile "pybingwp-1-4-b01.exe"
+OutFile "pybingwp-1-4.exe"
 
 ; The default installation directory
 InstallDir $PROGRAMFILES\Genzj\${PROGRAM_NAME}
@@ -97,6 +97,9 @@ Section $(NAME_SecMain) SecMain
   ; Set output path to the installation directory.
   SetOutPath $INSTDIR
 
+  ; Build target files
+  !system 'py -3 setup.py build'
+
   ; Put file there
   !cd ./build/exe.win32-3.3
   File /x *.pyc /x __pycache__ "*"
@@ -117,33 +120,43 @@ SectionEnd
 SectionGroup $(NAME_SecGrCountry) SecGrCountry
   Section /o "Australia" country_au
     StrCpy $COUNTRY_CODE "au"
+    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section /o "Brazil" country_br
     StrCpy $COUNTRY_CODE "br"
+    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section /o "Canada" country_ca
     StrCpy $COUNTRY_CODE "ca"
+    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section /o "China (HD)" country_cn
     StrCpy $COUNTRY_CODE "cn"
+    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section /o "Germany" country_de
     StrCpy $COUNTRY_CODE "de"
+    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section /o "France" country_fr
     StrCpy $COUNTRY_CODE "fr"
+    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section /o "Japan" country_jp
     StrCpy $COUNTRY_CODE "jp"
+    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section /o "New Zealand (HD)" country_nz
     StrCpy $COUNTRY_CODE "nz"
+    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section "USA (HD)" country_us
     StrCpy $COUNTRY_CODE "us"
+    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section /o "United Kingdom" country_uk
     StrCpy $COUNTRY_CODE "uk"
+    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
 SectionGroupEnd
 
@@ -151,20 +164,20 @@ Section $(NAME_SecStartMenu) SecStartMenu
   CreateDirectory "$SMPROGRAMS\${PROGRAM_NAME}"
   CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
   CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME}.lnk" "$INSTDIR\BingWallpaper.exe" \
-                 "--redownload -c $COUNTRY_CODE" "$INSTDIR\bingwallpaper.ico" 0
+                 "--redownload" "$INSTDIR\bingwallpaper.ico" 0
   CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME} Commandline Mode.lnk" "cmd" \
-                 '/k "$INSTDIR\BingWallpaper-cli.exe" --redownload -c $COUNTRY_CODE' \
+                 '/k "$INSTDIR\BingWallpaper-cli.exe" --redownload' \
                  "$INSTDIR\bingwallpaper.ico" 0
 SectionEnd
 
 ; Create auto startup
 Section $(NAME_SecStartup) SecStartup
-  CreateShortCut "$SMSTARTUP\${PROGRAM_NAME}.lnk" "$INSTDIR\BingWallpaper.exe" "-b -c $COUNTRY_CODE" "$INSTDIR\bingwallpaper.ico" 0
+  CreateShortCut "$SMSTARTUP\${PROGRAM_NAME}.lnk" "$INSTDIR\BingWallpaper.exe" "-b" "$INSTDIR\bingwallpaper.ico" 0
 SectionEnd
 
 ; Run it immediately
 Section $(NAME_SecRunit) SecRunit
-  Exec '"$INSTDIR\BingWallpaper.exe" -b -c $COUNTRY_CODE'
+  Exec '"$INSTDIR\BingWallpaper.exe" -b'
 SectionEnd
 
 ;--------------------------------
