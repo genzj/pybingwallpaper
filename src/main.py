@@ -97,7 +97,7 @@ def prepare_config_db():
             bing.com in different countries may show different
             backgrounds. 
             au: Australia  br: Brazil  ca: Canada  cn: China  de:Germany
-            fr: France  jp: Japan  nz: Netherland  us: USA  uk: United Kingdom
+            fr: France  jp: Japan  nz: New Zealand  us: USA  uk: United Kingdom
             auto: select country according to your IP address (by Bing.com)
             Note: only China(cn), Netherland(nz) and USA(us) have
             high resolution (1920x1200) wallpapers; the rest offer 1366x768 only.''',
