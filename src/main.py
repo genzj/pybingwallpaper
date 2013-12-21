@@ -118,10 +118,15 @@ def prepare_config_db():
                 'section':'Debug',
                 }}
             ))
-    params.append(config.ConfigParameter('interval', type=int, defaults=2,
+    def convert_interval(interval):
+        i = int(interval)
+        return i if i >=1 else 1
+
+    params.append(config.ConfigParameter('interval',
+            type=convert_interval, defaults=2,
             help='''interval between each two wallpaper checkings 
                     in unit of hours. applicable only in `background` mode.
-                    2 hours by default.''',
+                    at lease 1 hour; 2 hours by default.''',
             loader_opts={'cli':{
                 'flags':('-i', '--interval'),
                 }, 'conffile':{
