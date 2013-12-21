@@ -30,18 +30,22 @@ class BingWallpaperPage:
     BASE_URL='http://www.bing.com'
     IMAGE_API='/HPImageArchive.aspx?format=js&idx={idx}&n={n}'
     def __init__(self, idx, n=10, base=BASE_URL, api=IMAGE_API, country_code=None, 
-                high_resolution = HighResolutionSetting.PREFER):
-        self.update(idx, n, base, api, country_code, high_resolution)
+                market_code=None, high_resolution = HighResolutionSetting.PREFER):
+        self.update(idx, n, base, api, country_code, market_code, high_resolution)
 
     def update(self, idx, n=10, base=BASE_URL, api=IMAGE_API, country_code=None,
-                high_resolution = HighResolutionSetting.PREFER):
+                market_code=None, high_resolution = HighResolutionSetting.PREFER):
         self.base = base
         self.api = api
         self.reset()
         self.url = webutil.urljoin(self.base, self.api.format(idx=idx, n=n))
         self.country_code = country_code
+        self.market_code = market_code
         self.high_resolution = high_resolution
-        if country_code:
+        if market_code:
+            BingWallpaperPage.validate_market(market_code)
+            self.url = '&'.join([self.url, 'mkt={}'.format(market_code)])
+        elif country_code:
             self.url = '&'.join([self.url, 'cc={}'.format(country_code)])
 
     def reset(self):
@@ -127,6 +131,13 @@ class BingWallpaperPage:
 
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__, repr(self.url))
+    
+    @staticmethod
+    def validate_market(market_code):
+        #
+        if not re.match(r'\w\w-\w\w', market_code):
+            raise ValueError('%s is not a valid market code.'%(market_code,))
+        return True
 
 if __name__ == '__main__':
     log.setDebugLevel(log.DEBUG)

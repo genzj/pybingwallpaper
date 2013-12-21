@@ -93,6 +93,20 @@ def prepare_config_db():
                 'section':'Download',
                 }}
             ))
+    params.append(config.ConfigParameter('market', defaults='',
+            help='''specify market from which the wallpaper should be downloaded.
+            Market is a more generic way to specify language-country of bing.com.
+            The list of markets may grow sometimes, and different language of the
+            same country may have different image, so consider using it instead of
+            country. Market code should be specified in format 'xy-ab' such as en-us.
+            Note: specify this parameter will override any settings to --country.
+            ''',
+            loader_opts={'cli':{
+                'flags':('--market',),
+                }, 'conffile':{
+                'section':'Download',
+                }}
+            ))
     params.append(config.ConfigParameter('debug', defaults=0,
             help='''enable debug outputs. 
             The more --debug the more detailed the log will be''',
@@ -223,12 +237,18 @@ def prepare_output_dir(d):
 def download_wallpaper(run_config):
     idx = run_config.offset
     country_code = None if run_config.country == 'auto' else run_config.country
-    s = bingwallpaper.BingWallpaperPage(idx, 
-            country_code = country_code,
-            high_resolution = bingwallpaper.HighResolutionSetting.getByName(
-                run_config.size_mode
+    market_code = None if not run_config.market else run_config.market
+    try:
+        s = bingwallpaper.BingWallpaperPage(idx, 
+                country_code = country_code,
+                market_code = market_code,
+                high_resolution = bingwallpaper.HighResolutionSetting.getByName(
+                    run_config.size_mode
+                    )
                 )
-            )
+    except Exception:
+        _logger.critical('invalid configuration.', exc_info=1)
+        sysexit(1)
 
     _logger.debug(repr(s))
     s.load()
