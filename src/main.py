@@ -342,8 +342,12 @@ def set_debug_details(level):
         l = log.PAGEDUMP
     log.setDebugLevel(l)
 
-def main(run_config, daemon=None):
+def main(daemon=None):
     if daemon: _logger.info('daemon %s triggers an update', str(daemon))
+    # reload config again in case the config file has been modified after
+    #last shooting
+    configdb = prepare_config_db()
+    run_config = load_config(configdb)
     setter.load_ext_setters(dirname(abspath(argv[0])))
 
     prepare_output_dir(run_config.output_folder)
@@ -372,10 +376,10 @@ def schedule_next_poll(run_config, daemon):
     elif not daemon:
         _logger.error('no scheduler')
 
-def start_daemon(run_config):
+def start_daemon():
     daemon = sched.scheduler()
     
-    main(run_config, daemon)
+    main(daemon)
     _logger.info('daemon %s is running', str(daemon))
     daemon.run()
     _logger.info('daemon %s exited', str(daemon))
@@ -431,7 +435,7 @@ if __name__ == '__main__':
     run_config = load_config(configdb)
     set_debug_details(run_config.debug)
     if run_config.background:
-        start_daemon(run_config)
+        start_daemon()
     else:
-        main(run_config, None)
+        main(None)
     sysexit(0)
