@@ -55,8 +55,10 @@ def prepare_config_db():
 
     params.append(config.ConfigParameter('generate_config',
             defaults=False,
-            help='''generate a configuration file with default configuration
-            and exit. path and name of configuration file can be specified with
+            help='''generate a configuration file containing arguments
+            specified in command line and exit. to generate default config
+            file, issue without other command arguments.
+            path and name of configuration file can be specified with
             --config-file''',
             loader_srcs=['cli', 'defload'],
             loader_opts={'cli':{
@@ -397,7 +399,7 @@ def load_config(configdb, args = None):
     run_config = config.merge_config(default_config, cli_config)
 
     if run_config.generate_config:
-        generate_default_config(configdb, run_config.config_file)
+        generate_config_file(configdb, run_config)
 
     try:
         conf_config = config.from_file(configdb, run_config.config_file)
@@ -422,12 +424,12 @@ def save_config(configdb, run_config, filename=None):
     filename = run_config.config_file if not filename else filename
     config.to_file(configdb, run_config, filename)
 
-def generate_default_config(configdb, filename):
-    default_config = config.DefaultValueLoader().load(configdb)
-    _logger.info('save default config to file %s:\n\t%s', 
+def generate_config_file(configdb, config_content):
+    filename = config_content.config_file
+    _logger.info('save following config to file %s:\n\t%s', 
             filename, 
-            config.pretty(default_config, '\n\t'))
-    save_config(configdb, default_config, filename)
+            config.pretty(config_content, '\n\t'))
+    save_config(configdb, config_content, filename)
     sysexit(0)
 
 if __name__ == '__main__':
