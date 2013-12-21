@@ -143,7 +143,7 @@ def prepare_config_db():
             ))
 
     params.append(config.ConfigParameter('size_mode', defaults='prefer',
-            choices=('prefer', 'insist', 'never'),
+            choices=('prefer', 'highest', 'insist', 'manual', 'never'),
             help='''set selecting strategy when wallpapers in different 
                     size are available (normally 1920x1200 and 1366x768).
                     `prefer` (default) uses high resolution if it's 
@@ -153,9 +153,21 @@ def prepare_config_db():
                     normal size wallpapers, if `insist` is adopted
                     with those sites, no wallpaper can be downloaded,
                     see `--country` for more);
-                    `never` always use normal resolution.''',
+                    `highest` use the highest available resolution, that
+                    is, 1920x1200 for HD sites, 1920x1080 for others;
+                    `never` always use normal resolution;
+                    `manual` use resolution specified in `--image-size`''',
             loader_opts={'cli':{
                 'flags':('-m', '--size-mode'),
+                }, 'conffile':{
+                'section':'Download',
+                }}
+            ))
+    params.append(config.ConfigParameter('image_size', defaults='',
+            help='''specify resolution of image to download. check
+                    `--size-mode` for more''',
+            loader_opts={'cli':{
+                'flags':('--image-size',),
                 }, 'conffile':{
                 'section':'Download',
                 }}
@@ -244,15 +256,16 @@ def download_wallpaper(run_config):
                 market_code = market_code,
                 high_resolution = bingwallpaper.HighResolutionSetting.getByName(
                     run_config.size_mode
-                    )
+                    ),
+                resolution = run_config.image_size
                 )
+        _logger.debug(repr(s))
+        s.load()
+        _logger.log(log.PAGEDUMP, str(s))
     except Exception:
-        _logger.critical('invalid configuration.', exc_info=1)
-        sysexit(1)
+        _logger.fatal('error happened during loading from bing.com.', exc_info=1)
+        return None
 
-    _logger.debug(repr(s))
-    s.load()
-    _logger.log(log.PAGEDUMP, str(s))
     if not s.loaded():
         _logger.fatal('can not load url %s. aborting...', s.url)
         return None

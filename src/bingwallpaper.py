@@ -13,28 +13,72 @@ def _property_need_loading(f):
     return wrapper
 
 class HighResolutionSetting:
-    PREFER = 1
-    INSIST = 2
-    NEVER = 3
+    settings = dict()
+    def getPicUrl(self, rooturl, imgurlbase, fallbackurl, has_wp, *args, **kwargs):
+        raise NotImplementedError()
+
     @staticmethod
     def getByName(name):
-        k = {'prefer': HighResolutionSetting.PREFER,
-             'insist': HighResolutionSetting.INSIST,
-             'never' : HighResolutionSetting.NEVER
-             }
-        if name not in k:
+        if name not in HighResolutionSetting.settings:
             raise ValueError('{} is not a legal resolution setting'.format(name))
-        return k[name]
+        return HighResolutionSetting.settings[name]
+
+class PreferHighResolution(HighResolutionSetting):
+    def getPicUrl(self, rooturl, imgurlbase, fallbackurl, has_wp, *args, **kwargs):
+        if has_wp:
+            wplink = webutil.urljoin(rooturl, '_'.join([imgurlbase,'1920x1200.jpg'])) 
+            _logger.debug('in prefer mode, get high resolution url %s', wplink)
+        else:
+            wplink = webutil.urljoin(rooturl, fallbackurl)
+            _logger.debug('in prefer mode, get normal resolution url %s', wplink)
+        return wplink
+
+class InsistHighResolution(HighResolutionSetting):
+    def getPicUrl(self, rooturl, imgurlbase, fallbackurl, has_wp, *args, **kwargs):
+        if has_wp:
+            wplink = webutil.urljoin(rooturl, '_'.join([imgurlbase,'1920x1200.jpg'])) 
+            _logger.debug('in insist mode, get high resolution url %s', wplink)
+        else:
+            wplink = None
+            _logger.debug('in insist mode, drop normal resolution pic')
+        return wplink
+
+class NeverHighResolution(HighResolutionSetting):
+    def getPicUrl(self, rooturl, imgurlbase, fallbackurl, has_wp, *args, **kwargs):
+        wplink = webutil.urljoin(rooturl, fallbackurl)
+        _logger.debug('never use high resolution, use %s', wplink)
+        return wplink
+
+class HighestResolution(HighResolutionSetting):
+    def getPicUrl(self, rooturl, imgurlbase, fallbackurl, has_wp, *args, **kwargs):
+        if has_wp:
+            wplink = webutil.urljoin(rooturl, '_'.join([imgurlbase,'1920x1200.jpg'])) 
+            _logger.debug('support wallpaper, get high resolution url %s', wplink)
+        else:
+            wplink = webutil.urljoin(rooturl, '_'.join([imgurlbase,'1920x1080.jpg'])) 
+            _logger.debug('not support wallpaper, use second highest resolution %s', wplink)
+        return wplink
+
+class ManualHighResolution(HighResolutionSetting):
+    def getPicUrl(self, rooturl, imgurlbase, fallbackurl, has_wp, resolution):
+        if not re.match(r'\d+x\d+', resolution):
+            _logger.error('invalid resolution "%s" for manual mode', resolution)
+            raise ValueError('invalid resolution "%s"'%(resolution, ))
+        wplink = webutil.urljoin(rooturl, ''.join([imgurlbase, '_', resolution, '.jpg'])) 
+        _logger.debug('manually specify resolution, use %s', wplink)
+        return wplink
+
+HighResolutionSetting.settings['prefer'] = PreferHighResolution
+HighResolutionSetting.settings['insist'] = InsistHighResolution
+HighResolutionSetting.settings['never'] = NeverHighResolution
+HighResolutionSetting.settings['highest'] = HighestResolution
+HighResolutionSetting.settings['manual'] = ManualHighResolution
 
 class BingWallpaperPage:
     BASE_URL='http://www.bing.com'
     IMAGE_API='/HPImageArchive.aspx?format=js&idx={idx}&n={n}'
     def __init__(self, idx, n=10, base=BASE_URL, api=IMAGE_API, country_code=None, 
-                market_code=None, high_resolution = HighResolutionSetting.PREFER):
-        self.update(idx, n, base, api, country_code, market_code, high_resolution)
-
-    def update(self, idx, n=10, base=BASE_URL, api=IMAGE_API, country_code=None,
-                market_code=None, high_resolution = HighResolutionSetting.PREFER):
+                market_code=None, high_resolution = PreferHighResolution, resolution='1920x1200'):
         self.base = base
         self.api = api
         self.reset()
@@ -42,6 +86,7 @@ class BingWallpaperPage:
         self.country_code = country_code
         self.market_code = market_code
         self.high_resolution = high_resolution
+        self.resolution = resolution
         if market_code:
             BingWallpaperPage.validate_market(market_code)
             self.url = '&'.join([self.url, 'mkt={}'.format(market_code)])
@@ -76,24 +121,10 @@ class BingWallpaperPage:
     def _update_img_link(self):
         self.wplinks.clear()
         for i in self.__images:
-            _logger.debug('handling %s', i['url'])
-            if self.high_resolution == HighResolutionSetting.PREFER:
-                if i.get('wp', False):
-                    wplink = webutil.urljoin(self.base, '_'.join([i['urlbase'],'1920x1200.jpg'])) 
-                    _logger.debug('in prefer mode, get high resolution url %s', wplink)
-                else:
-                    wplink = webutil.urljoin(self.base, i['url'])
-                    _logger.debug('in prefer mode, get normal resolution url %s', wplink)
-            elif self.high_resolution == HighResolutionSetting.INSIST:
-                if i.get('wp', False):
-                    wplink = webutil.urljoin(self.base, '_'.join([i['urlbase'],'1920x1200.jpg'])) 
-                    _logger.debug('in insist mode, get high resolution url %s', wplink)
-                else:
-                    wplink = None
-                    _logger.debug('in insist mode, drop normal resolution pic')
-            elif self.high_resolution == HighResolutionSetting.NEVER:
-                wplink = webutil.urljoin(self.base, i['url'])
-                _logger.debug('never use high resolution, use %s', wplink)
+            has_wp = i.get('wp', False)
+            _logger.debug('handling %s, rooturl=%s, imgurlbase=%s, has_wp=%s, resolution=%s', 
+                        i['url'], self.base, i['urlbase'], has_wp, self.resolution)
+            wplink = self.high_resolution().getPicUrl(self.base, i['urlbase'], i['url'], has_wp, self.resolution)
             if wplink: self.wplinks.append((wplink, i['copyright']))
 
     def load(self):
