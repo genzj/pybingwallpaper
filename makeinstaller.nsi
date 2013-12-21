@@ -120,53 +120,50 @@ SectionEnd
 SectionGroup $(NAME_SecGrCountry) SecGrCountry
   Section /o "Australia" country_au
     StrCpy $COUNTRY_CODE "au"
-    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section /o "Brazil" country_br
     StrCpy $COUNTRY_CODE "br"
-    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section /o "Canada" country_ca
     StrCpy $COUNTRY_CODE "ca"
-    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section /o "China (HD)" country_cn
     StrCpy $COUNTRY_CODE "cn"
-    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section /o "Germany" country_de
     StrCpy $COUNTRY_CODE "de"
-    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section /o "France" country_fr
     StrCpy $COUNTRY_CODE "fr"
-    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section /o "Japan" country_jp
     StrCpy $COUNTRY_CODE "jp"
-    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section /o "New Zealand (HD)" country_nz
     StrCpy $COUNTRY_CODE "nz"
-    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section "USA (HD)" country_us
     StrCpy $COUNTRY_CODE "us"
-    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
   Section /o "United Kingdom" country_uk
     StrCpy $COUNTRY_CODE "uk"
-    Exec '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
   SectionEnd
 SectionGroupEnd
+
+Section "-generate configuration file"
+  ExecWait '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
+SectionEnd
 
 Section $(NAME_SecStartMenu) SecStartMenu
   CreateDirectory "$SMPROGRAMS\${PROGRAM_NAME}"
   CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
   CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME}.lnk" "$INSTDIR\BingWallpaper.exe" \
-                 "--redownload" "$INSTDIR\bingwallpaper.ico" 0
+                 "--redownload --foreground" "$INSTDIR\bingwallpaper.ico" 0
   CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME} Commandline Mode.lnk" "cmd" \
-                 '/k "$INSTDIR\BingWallpaper-cli.exe" --redownload' \
+                 '/k "$INSTDIR\BingWallpaper-cli.exe" --redownload --foreground' \
+                 "$INSTDIR\bingwallpaper.ico" 0
+  CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\Edit Configuration.lnk" "notepad.exe" \
+                 '"$INSTDIR\settings.conf"' \
                  "$INSTDIR\bingwallpaper.ico" 0
 SectionEnd
 
