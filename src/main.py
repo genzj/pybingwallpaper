@@ -79,6 +79,18 @@ def prepare_config_db():
                 'converter':config.str_to_bool,
                 }}
             ))
+
+    params.append(config.ConfigParameter('foreground',
+            defaults=False,
+            help='''force working in foreground mode to cancel 
+            the effect of `background` in config file.''',
+            loader_srcs=['cli', 'defload'],
+            loader_opts={'cli':{
+                'flags':('--foreground',),
+                'action':'store_true'
+                }}
+            ))
+
     params.append(config.ConfigParameter('country', defaults='auto',
             choices=('au', 'br', 'ca', 'cn', 'de', 'fr', 'jp', 'nz', 'us', 'uk', 'auto'), 
             help='''select country code sent to bing.com.
@@ -370,9 +382,11 @@ def main(daemon=None):
     if daemon: schedule_next_poll(run_config, daemon)
 
 def schedule_next_poll(run_config, daemon):
-    if run_config.background and daemon:
+    if not run_config.foreground and run_config.background and daemon:
         _logger.debug('schedule next running in %d seconds', run_config.interval*3600)
         daemon.enter(run_config.interval*3600, 1, main, (run_config, daemon))
+    elif run_config.foreground:
+        _logger.info('force foreground mode from command line')
     elif not run_config.background:
         _logger.error('not in daemon mode')
     elif not daemon:
@@ -436,7 +450,7 @@ if __name__ == '__main__':
     configdb = prepare_config_db()
     run_config = load_config(configdb)
     set_debug_details(run_config.debug)
-    if run_config.background:
+    if not run_config.foreground and run_config.background:
         start_daemon()
     else:
         main(None)
