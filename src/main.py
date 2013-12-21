@@ -99,7 +99,7 @@ def prepare_config_db():
             au: Australia  br: Brazil  ca: Canada  cn: China  de:Germany
             fr: France  jp: Japan  nz: New Zealand  us: USA  uk: United Kingdom
             auto: select country according to your IP address (by Bing.com)
-            Note: only China(cn), Netherland(nz) and USA(us) have
+            Note: only China(cn), New Zealand(nz) and USA(us) have
             high resolution (1920x1200) wallpapers; the rest offer 1366x768 only.''',
             loader_opts={'cli':{
                 'flags':('-c', '--country'),
