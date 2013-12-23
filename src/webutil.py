@@ -18,6 +18,7 @@ if sys.version_info[:2] < (3, 0):
     Request = _urllib2.Request
     urlopen2 = _urllib2.urlopen
 else:
+    from ntlmauth import HTTPNtlmAuthHandler
     _logger.debug('importing libs for python 3.x')
     _urlparse = import_module('urllib.parse')
     _urlrequest = import_module('urllib.request')
@@ -25,6 +26,25 @@ else:
     urlencode = _urlparse.urlencode
     Request = _urlrequest.Request
     urlopen2 = _urlrequest.urlopen
+
+    def setup_proxy(proxy_protocols, proxy_url, proxy_port, sites, username="", password=""):
+        proxy_dict = {p:'%s:%s'%(proxy_url, proxy_port) for p in proxy_protocols}
+        ph=_urlrequest.ProxyHandler(proxy_dict)
+        passman = _urlrequest.HTTPPasswordMgrWithDefaultRealm()
+
+        _logger.info('add proxy site %s', sites)
+        passman.add_password(None, sites, username, password)
+        pnah= HTTPNtlmAuthHandler.ProxyNtlmAuthHandler(passman)
+        pbah= _urlrequest.ProxyBasicAuthHandler(passman)
+        pdah= _urlrequest.ProxyDigestAuthHandler(passman)
+        
+        cp=_urlrequest.HTTPCookieProcessor()
+        opener=_urlrequest.build_opener(cp, 
+                                        _urlrequest.HTTPSHandler(debuglevel=1), 
+                                        _urlrequest.HTTPHandler(debuglevel=99), 
+                                        ph, pnah, pbah, pdah,
+                                        _urlrequest.HTTPErrorProcessor())
+        _urlrequest.install_opener(opener)
 
 urljoin = _urlparse.urljoin
 
@@ -46,7 +66,7 @@ def loadurl(url, headers={}):
         _logger.exception(ex)
         return None
     if con:
-        _logger.debug("Hit %s %d", str(con), con.getcode())
+        _logger.debug("Hit %s code: %s", str(con), con.getcode())
         data = con.read(-1)
         data = _ungzip(data)
         _logger.log(log.PAGEDUMP, repr(data))

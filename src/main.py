@@ -200,7 +200,38 @@ def prepare_config_db():
                 'section':'Download',
                 }}
             ))
-
+    params.append(config.ConfigParameter('proxy_server', defaults='',
+            help='''proxy server url, ex: http://10.1.1.1''',
+            loader_opts={'cli':{
+                'flags':('--proxy-server'),
+                }, 'conffile':{
+                'section':'Proxy',
+                }}
+            ))
+    params.append(config.ConfigParameter('proxy_port', defaults='80',
+            help='''port of proxy server, default: 80''',
+            loader_opts={'cli':{
+                'flags':('--proxy-port'),
+                }, 'conffile':{
+                'section':'Proxy',
+                }}
+            ))
+    params.append(config.ConfigParameter('proxy_username', defaults='',
+            help='''optional username for proxy server authentication''',
+            loader_opts={'cli':{
+                'flags':('--proxy-username'),
+                }, 'conffile':{
+                'section':'Proxy',
+                }}
+            ))
+    params.append(config.ConfigParameter('proxy_password', defaults='',
+            help='''optional password for proxy server authentication''',
+            loader_opts={'cli':{
+                'flags':('--proxy-password'),
+                }, 'conffile':{
+                'section':'Proxy',
+                }}
+            ))
     params.append(config.ConfigParameter('redownload', defaults=False,
             help='''do not check history records. Download
                     must be done. downloaded picture will still
@@ -367,7 +398,8 @@ def main(daemon=None):
     prepare_output_dir(run_config.output_folder)
 
     load_history()
-    filerecord = download_wallpaper(run_config)
+    install_proxy(run_config)
+    filerecord = download_wallpaper(config)
 
     if filerecord:
         save_history(filerecord)
@@ -445,6 +477,27 @@ def generate_config_file(configdb, config_content):
             config.pretty(config_content, '\n\t'))
     save_config(configdb, config_content, filename)
     sysexit(0)
+
+def install_proxy(config):
+    from itertools import product
+    if not config.proxy_server:
+        _logger.debug('no proxy server specified')
+        return
+    else:
+        if len(config.proxy_password) <= 4:
+            hidden_password = '*'*len(config.proxy_password)
+        else:
+            hidden_password = '%s%s%s'%(config.proxy_password[0], 
+                                        '*'*(len(config.proxy_password)-2), 
+                                        config.proxy_password[-1])
+        _logger.info('user specified proxy: "%s:%s"', config.proxy_server, config.proxy_port)
+        _logger.debug('proxy username: "%s" password: "%s"', config.proxy_username, hidden_password)
+    PROXY_SITES_PROTOCOL = ('http', 'https')
+    PROXY_SITES = ('bing.com', 'www.bing.com', 'cn.bing.com', 'nz.bing.com')
+
+    proxy_sites = [p+'://'+s for p, s in product(('http', 'https'), PROXY_SITES)]
+    webutil.setup_proxy(PROXY_SITES_PROTOCOL, config.proxy_server, config.proxy_port, 
+                            proxy_sites, config.proxy_username, config.proxy_password)
 
 if __name__ == '__main__':
     configdb = prepare_config_db()
