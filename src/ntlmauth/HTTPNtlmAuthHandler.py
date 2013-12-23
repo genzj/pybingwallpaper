@@ -19,7 +19,7 @@ from . import ntlm
 import inspect
 def debug_output(*args, **kwargs):
     lineno = inspect.currentframe().f_back.f_lineno
-    print("debug at line ", lineno, ": ", *args, **kwargs)
+    #print("debug at line ", lineno, ": ", *args, **kwargs)
 
 class AbstractNtlmAuthHandler:
     

@@ -203,7 +203,7 @@ def prepare_config_db():
     params.append(config.ConfigParameter('proxy_server', defaults='',
             help='''proxy server url, ex: http://10.1.1.1''',
             loader_opts={'cli':{
-                'flags':('--proxy-server'),
+                'flags':('--proxy-server',),
                 }, 'conffile':{
                 'section':'Proxy',
                 }}
@@ -211,7 +211,7 @@ def prepare_config_db():
     params.append(config.ConfigParameter('proxy_port', defaults='80',
             help='''port of proxy server, default: 80''',
             loader_opts={'cli':{
-                'flags':('--proxy-port'),
+                'flags':('--proxy-port',),
                 }, 'conffile':{
                 'section':'Proxy',
                 }}
@@ -219,7 +219,7 @@ def prepare_config_db():
     params.append(config.ConfigParameter('proxy_username', defaults='',
             help='''optional username for proxy server authentication''',
             loader_opts={'cli':{
-                'flags':('--proxy-username'),
+                'flags':('--proxy-username',),
                 }, 'conffile':{
                 'section':'Proxy',
                 }}
@@ -227,7 +227,7 @@ def prepare_config_db():
     params.append(config.ConfigParameter('proxy_password', defaults='',
             help='''optional password for proxy server authentication''',
             loader_opts={'cli':{
-                'flags':('--proxy-password'),
+                'flags':('--proxy-password',),
                 }, 'conffile':{
                 'section':'Proxy',
                 }}
@@ -399,7 +399,7 @@ def main(daemon=None):
 
     load_history()
     install_proxy(run_config)
-    filerecord = download_wallpaper(config)
+    filerecord = download_wallpaper(run_config)
 
     if filerecord:
         save_history(filerecord)
