@@ -18,6 +18,9 @@ HISTORY_FILE = pathjoin(expanduser('~'), 'bing-wallpaper-history.json')
 
 _logger = log.getChild('main')
 
+class CannotLoadImagePage(Exception):
+    pass
+
 def load_setters():
     if platform == 'win32':
         return ['no', 'win']
@@ -317,11 +320,12 @@ def download_wallpaper(run_config):
         return None
 
     if not s.loaded():
-        _logger.fatal('can not load url %s. aborting...', s.url)
-        return None
+        _logger.error('can not load url %s. aborting...', s.url)
+        raise CannotLoadImagePage(s)
     for wplink, info in s.image_links():
         outfile = get_output_filename(run_config, wplink)
         rec = record.default_manager.get_by_url(wplink)
+        _logger.debug('%s', rec)
 
         if outfile == rec['local_file']:
             if not run_config.redownload:
@@ -394,7 +398,17 @@ def main(daemon=None):
 
     load_history()
     install_proxy(run_config)
-    filerecord = download_wallpaper(run_config)
+    try:
+        filerecord = download_wallpaper(run_config)
+    except CannotLoadImagePage:
+        if not run_config.foreground and run_config.background and daemon:
+            _logger.info("network error happened, daemon will retry in 60 seconds")
+            timeout = 60
+        else:
+            _logger.info("network error happened. please retry after Internet connection restore.")
+        filerecord = None
+    else:
+        timeout = run_config.interval*3600
 
     if filerecord:
         save_history(filerecord)
@@ -406,18 +420,17 @@ def main(daemon=None):
         s.set(filerecord['local_file'], run_config.setter_args)
         _logger.info('all done. enjoy your new wallpaper')
 
-    if daemon: schedule_next_poll(run_config, daemon)
-
-def schedule_next_poll(run_config, daemon):
     if not run_config.foreground and run_config.background and daemon:
-        _logger.debug('schedule next running in %d seconds', run_config.interval*3600)
-        daemon.enter(run_config.interval*3600, 1, main, (daemon, ))
+        schedule_next_poll(timeout, daemon)
     elif run_config.foreground:
         _logger.info('force foreground mode from command line')
-    elif not run_config.background:
-        _logger.error('not in daemon mode')
-    elif not daemon:
+
+def schedule_next_poll(timeout, daemon):
+    if not daemon:
         _logger.error('no scheduler')
+    else:
+        _logger.debug('schedule next running in %d seconds', run_config.interval*3600)
+        daemon.enter(timeout, 1, main, (daemon, ))
 
 def start_daemon():
     daemon = sched.scheduler()
@@ -432,11 +445,11 @@ def load_config(configdb, args = None):
     set_debug_details(args.count('--debug')+args.count('-d'))
 
     default_config = config.DefaultValueLoader().load(configdb)
-    _logger.info('default config:\n\t%s', config.pretty(default_config, '\n\t'))
+    _logger.debug('default config:\n\t%s', config.pretty(default_config, '\n\t'))
 
     # parse cli options at first because we need the config file path in it
     cli_config = config.CommandLineArgumentsLoader().load(configdb, argv[1:])
-    _logger.info('cli arg parsed:\n\t%s', config.pretty(cli_config, '\n\t'))
+    _logger.debug('cli arg parsed:\n\t%s', config.pretty(cli_config, '\n\t'))
     run_config = config.merge_config(default_config, cli_config)
 
     if run_config.generate_config:
@@ -448,7 +461,7 @@ def load_config(configdb, args = None):
         _logger.error(err)
         sysexit(1)
 
-    _logger.info('config file parsed:\n\t%s', config.pretty(conf_config, '\n\t'))
+    _logger.debug('config file parsed:\n\t%s', config.pretty(conf_config, '\n\t'))
     run_config = config.merge_config(run_config, conf_config)
 
     # override saved settings again with cli options again, because we want

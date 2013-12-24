@@ -17,15 +17,18 @@ if sys.version_info[:2] < (3, 0):
     unquote = _urllib.urlencode
     Request = _urllib2.Request
     urlopen2 = _urllib2.urlopen
+    URLError = _urllib2.URLError
 else:
     from ntlmauth import HTTPNtlmAuthHandler
     _logger.debug('importing libs for python 3.x')
+    _urllib = import_module('urllib')
     _urlparse = import_module('urllib.parse')
     _urlrequest = import_module('urllib.request')
     urlparse = _urlparse.urlparse
     urlencode = _urlparse.urlencode
     Request = _urlrequest.Request
     urlopen2 = _urlrequest.urlopen
+    URLError = _urllib.error.URLError
 
     def setup_proxy(proxy_protocols, proxy_url, proxy_port, sites, username="", password=""):
         proxy_dict = {p:'%s:%s'%(proxy_url, proxy_port) for p in proxy_protocols}
@@ -61,9 +64,9 @@ def loadurl(url, headers={}):
     try:
         req = Request(url=url, headers=headers)
         con = urlopen2(req)
-    except Exception as ex:
-        _logger.error('during load %s with header %s',  url, headers)
-        _logger.exception(ex)
+    except Exception as err:
+        _logger.error('error %s occurs during load %s with header %s', err, url, headers)
+        _logger.debug('', exc_info=1)
         return None
     if con:
         _logger.debug("Hit %s code: %s", str(con), con.getcode())
@@ -95,9 +98,9 @@ def postto(url, datadict, headers={}, decodec='gbk'):
             _logger.error("No data returned.")
             return None
 
-    except Exception as ex:
-        _logger.error('during post %s to %s', params, url)
-        _logger.exception(ex)
+    except Exception as err:
+        _logger.error('error %s occurs during post %s to %s', err, params, url)
+        _logger.debug('', exc_info=1)
 
 if __name__ == '__main__':
     _logger.setLevel(log.PAGEDUMP)
