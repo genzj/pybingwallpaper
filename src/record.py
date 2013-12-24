@@ -20,6 +20,8 @@ class DownloadRecord(dict):
         self['local_file'] = local_file
         self['time'] = timestr
 
+null_record = DownloadRecord('', '', datetime.datetime.fromtimestamp(0))
+
 class DownloadRecordManager(dict):
     def __init__(self, name):
         dict.__init__(self)
@@ -51,5 +53,8 @@ class DownloadRecordManager(dict):
     
     def add(self, r):
         self[r['url']] = r
+
+    def get_by_url(self, url, default_rec=null_record):
+        return self.get(url, default_rec)
 
 default_manager = DownloadRecordManager('default')

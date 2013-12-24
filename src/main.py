@@ -320,30 +320,25 @@ def download_wallpaper(run_config):
         _logger.fatal('can not load url %s. aborting...', s.url)
         return None
     for wplink, info in s.image_links():
-        if wplink:
-            outfile = get_output_filename(run_config, wplink)
-            rec = record.default_manager.get(wplink, None)
+        outfile = get_output_filename(run_config, wplink)
+        rec = record.default_manager.get_by_url(wplink)
 
-            if rec and outfile == rec['local_file']:
-                if not run_config.redownload:
-                    _logger.info('file has been downloaded before, exit')
-                    return None
-                else:
-                    _logger.info('file has been downloaded before, redownload it')
+        if outfile == rec['local_file']:
+            if not run_config.redownload:
+                _logger.info('file has been downloaded before, exit')
+                return None
+            else:
+                _logger.info('file has been downloaded before, redownload it')
 
-            _logger.info('download photo of "%s"', info)
-            picture_content = webutil.loadurl(wplink)
-            if picture_content:
-                with open(outfile, 'wb') as of:
-                    of.write(picture_content)
-                    _logger.info('file saved %s', outfile)
-                r = record.DownloadRecord(wplink, outfile)
-                return r
-        _logger.debug('no wallpaper, try next')
+        _logger.info('download photo of "%s"', info)
+        picture_content = webutil.loadurl(wplink)
+        if picture_content:
+            with open(outfile, 'wb') as of:
+                of.write(picture_content)
+                _logger.info('file saved %s', outfile)
+            r = record.DownloadRecord(wplink, outfile)
+            return r
         
-    if s.filtered > 0:
-        _logger.info('%d picture(s) filtered, try again with -f option if you want them',
-                     s.filtered)
     _logger.info('bad luck, no wallpaper today:(')
     return None
 
