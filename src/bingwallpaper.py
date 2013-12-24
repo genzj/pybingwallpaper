@@ -77,8 +77,10 @@ HighResolutionSetting.settings['manual'] = ManualHighResolution
 class BingWallpaperPage:
     BASE_URL='http://www.bing.com'
     IMAGE_API='/HPImageArchive.aspx?format=js&idx={idx}&n={n}'
-    def __init__(self, idx, n=10, base=BASE_URL, api=IMAGE_API, country_code=None, 
+    def __init__(self, idx, n=1, base=BASE_URL, api=IMAGE_API, country_code=None, 
                 market_code=None, high_resolution = PreferHighResolution, resolution='1920x1200'):
+        self.idx = idx
+        self.n = n
         self.base = base
         self.api = api
         self.reset()
