@@ -27,8 +27,8 @@ You can also append arguments in *Command* box.
 
 #### Windows
 
-Download installer [from dropbox](https://www.dropbox.com/s/3h3xfpfdcwrg34r/pybingwp-1-4-1.exe) 
-or from [Baidu Disk(百度盘)](http://pan.baidu.com/s/1c07oPos) 
+Download installer [from dropbox](https://www.dropbox.com/s/fvkkeehfai1rgw1/pybingwp-1-4-2.exe) 
+or from [Baidu Disk(百度盘)](http://pan.baidu.com/s/1mg0mYq0) 
 and install it. A shortcut will be created in your startup folder. 
 
 You can edit the configuration to adjust features.
@@ -108,6 +108,14 @@ You can edit the configuration to adjust features.
       -o OFFSET, --offset OFFSET
                             start downloading from the photo of 'N' days ago.
                             specify 0 to download photo of today.
+      --proxy-server PROXY_SERVER
+                            proxy server url, ex: http://10.1.1.1
+      --proxy-port PROXY_PORT
+                            port of proxy server, default: 80
+      --proxy-username PROXY_USERNAME
+                            optional username for proxy server authentication
+      --proxy-password PROXY_PASSWORD
+                            optional password for proxy server authentication
       --redownload          do not check history records. Download must be done.
                             downloaded picture will still be recorded in history
                             file.
@@ -137,6 +145,9 @@ You can edit the configuration to adjust features.
 ----------
 
 ### Release Note
+* **2013-12-24 1.4.2**
+    * Support http/https proxy. Read [配置指南](https://github.com/genzj/pybingwallpaper/wiki/%E5%A6%82%E4%BD%95%E9%85%8D%E7%BD%AE%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F) [Proxy guidance](https://github.com/genzj/pybingwallpaper/wiki/How-to-use-pybingwallpaper-with-proxy) for details.
+
 * **2013-12-21 1.4.1**
     * Background mode bugfix
 
