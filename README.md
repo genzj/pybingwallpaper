@@ -145,6 +145,10 @@ You can edit the configuration to adjust features.
 ----------
 
 ### Release Note
+* **2013-12-24 1.4.3**
+    * Fix #13
+    * Fix #15
+
 * **2013-12-24 1.4.2**
     * Support http/https proxy. Read [配置指南](https://github.com/genzj/pybingwallpaper/wiki/%E5%A6%82%E4%BD%95%E9%85%8D%E7%BD%AE%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F) [Proxy guidance](https://github.com/genzj/pybingwallpaper/wiki/How-to-use-pybingwallpaper-with-proxy) for details.
 
