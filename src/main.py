@@ -534,6 +534,17 @@ def install_proxy(config):
     webutil.setup_proxy(PROXY_SITES_PROTOCOL, config.proxy_server, config.proxy_port, 
                             proxy_sites, config.proxy_username, config.proxy_password)
 
+def get_app_path(appfile=None):
+    appfile = appfile if appfile else argv[0]
+    apppath = dirname(appfile)
+    apppath = '.' if not apppath else apppath
+    oldpath = abspath(os.curdir)
+    os.chdir(apppath)
+    apppath = abspath(os.curdir)
+    os.chdir(oldpath)
+    return os.path.normcase(apppath)
+
+
 if __name__ == '__main__':
     configdb = prepare_config_db()
     run_config = load_config(configdb)
