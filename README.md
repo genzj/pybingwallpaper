@@ -12,6 +12,16 @@ be found [here](https://github.com/genzj/pyngwallpaper)
 
 ### Auto startup
 
+#### Windows
+
+Download installer from any of following links and install it.
+A shortcut will be created in your startup folder.
+
+* [from dropbox](https://www.dropbox.com/s/butd3dgxr98671t/pybingwp-1-4-3.exe) 
+* [Baidu Disk(百度盘)](http://pan.baidu.com/s/1eQBUD9o) 
+
+You can edit the configuration to adjust features.
+
 #### Linux with Gnome
 You just need to add a startup application:
 
@@ -20,18 +30,10 @@ You just need to add a startup application:
 then *add* a startup program with:
 
     Name: pybingwallpaper
-    Command: /path/to/pybingwallpaper/src/main.py
+    Command: python3 /path/to/pybingwallpaper/src/main.py -b
     Comment: download and update wallpaper!
 
 You can also append arguments in *Command* box.
-
-#### Windows
-
-Download installer [from dropbox](https://www.dropbox.com/s/fvkkeehfai1rgw1/pybingwp-1-4-2.exe) 
-or from [Baidu Disk(百度盘)](http://pan.baidu.com/s/1mg0mYq0) 
-and install it. A shortcut will be created in your startup folder. 
-
-You can edit the configuration to adjust features.
 
 ----------
 
@@ -157,11 +159,20 @@ You can edit the configuration to adjust features.
 
 ### Release Note
 * **2013-12-24 1.4.3**
-    * Fix #13
-    * Fix #15
+    * Fix #13 enhance robustness of network connection status: retry in
+      60 seconds after network failure 
+    * Fix #14 download image with Chinese logo whenever a 1920x1200 picture is
+      downloaded: add a collect mode, read [use collect mode](https://github.com/genzj/pybingwallpaper/wiki/Use-collect-mode) 
+      [使用收集模式](https://github.com/genzj/pybingwallpaper/wiki/%E4%BD%BF%E7%94%A8%E6%94%B6%E9%9B%86%E6%A8%A1%E5%BC%8F)
+      for more
+    * Fix #15 use n=1 instead of n=10 for more backtracking room: change
+      default n to 1
+    * Fix #16 can't read settings.conf when run out of installation dir: read
+      settings.conf from the same path of main.py by default
 
 * **2013-12-24 1.4.2**
-    * Support http/https proxy. Read [配置指南](https://github.com/genzj/pybingwallpaper/wiki/%E5%A6%82%E4%BD%95%E9%85%8D%E7%BD%AE%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F) [Proxy guidance](https://github.com/genzj/pybingwallpaper/wiki/How-to-use-pybingwallpaper-with-proxy) for details.
+    * Support http/https proxy.   
+    Read [配置指南](https://github.com/genzj/pybingwallpaper/wiki/%E5%A6%82%E4%BD%95%E9%85%8D%E7%BD%AE%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F) [Proxy guidance](https://github.com/genzj/pybingwallpaper/wiki/How-to-use-pybingwallpaper-with-proxy) for details.
 
 * **2013-12-21 1.4.1**
     * Background mode bugfix
