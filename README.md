@@ -89,19 +89,30 @@ You can edit the configuration to adjust features.
       -k, --keep-file-name  keep the original filename. By default downloaded file
                             will be renamed as 'wallpaper.jpg'. Keep file name
                             will retain all downloaded photos
-      -m {prefer,highest,insist,manual,never}, --size-mode {prefer,highest,insist,manual,never}
-                            set selecting strategy when wallpapers in different
-                            size are available (normally 1920x1200 and 1366x768).
+      -m {prefer,collect,highest,insist,manual,never}, 
+      --size-mode {prefer,collect,highest,insist,manual,never}
+                            set selecting strategy when wallpapers in 
+                            different size are available (normally 1920x1200
+                            and 1366x768).
                             `prefer` (default) uses high resolution if it's
                             available, otherwise downloads normal resolution;
-                            `insist` always use high resolution and ignore other
-                            pictures (Note: some countries have only normal size
-                            wallpapers, if `insist` is adopted with those sites,
-                            no wallpaper can be downloaded, see `--country` for
-                            more); `highest` use the highest available resolution,
-                            that is, 1920x1200 for HD sites, 1920x1080 for others;
-                            `never` always use normal resolution; `manual` use
-                            resolution specified in `--image-size`
+                            `insist` always use high resolution and ignore 
+                            other pictures (Note: some countries have only
+                            normal size wallpapers, if `insist` is adopted
+                            with those sites, no wallpaper can be 
+                            downloaded, see `--country` for more); 
+                            `highest` use the highest available resolution,
+                            that is, 1920x1200 for HD sites, 1920x1080 for 
+                            others;
+                            `never` always use normal resolution; 
+                            `manual` use resolution specified in `--image-size`
+                            resolution specified in `--image-size` `collect` 
+                            acts exactly as highest in most of cases, however
+                            it will also download the picture with Chinese 
+                            bing logo if the picture is ROW and in the size
+                            of 1920x1200 (try --market=en-ww). In collect
+                            mode, only the first picture (usually the one
+                            with English bing logo) will be set as wallpaper.
       --image-size IMAGE_SIZE
                             specify resolution of image to download. check
                             `--size-mode` for more
@@ -117,14 +128,13 @@ You can edit the configuration to adjust features.
       --proxy-password PROXY_PASSWORD
                             optional password for proxy server authentication
       --redownload          do not check history records. Download must be done.
-                            downloaded picture will still be recorded in history
-                            file.
+                            downloaded picture will still be recorded in 
+                            history file.
       -s {no,win,gnome2,gnome3}, --setter {no,win,gnome2,gnome3}
                             specify interface to be called for setting wallpaper.
                             'no' indicates downloading-only; 'gnome2/3' are only
                             for Linux with gnome; 'win' is for Windows only.
                             Customized setter can be added as dev doc described.
-                            Default: win
       --setter-args SETTER_ARGS
                             arguments for external setters
       -t OUTPUT_FOLDER, --output-folder OUTPUT_FOLDER
