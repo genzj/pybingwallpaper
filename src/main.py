@@ -48,7 +48,7 @@ def prepare_config_db():
 
     #TODO need to generate configuration path according to program path
     params.append(config.ConfigParameter('config_file',
-            defaults = 'settings.conf',
+            defaults = pathjoin(get_app_path(), 'settings.conf'),
             help=''''specify configuration file, use `settings.conf`
                 in installation directory by default.''',
             loader_srcs=['cli', 'defload'],
