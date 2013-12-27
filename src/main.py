@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from sys import argv, exit as sysexit, platform
 import os
-from os.path import expanduser, join as pathjoin, isdir, splitext
+from os.path import expanduser, join as pathjoin, isfile, isdir, splitext
 from os.path import basename, dirname, abspath
 import log
 import webutil
@@ -49,7 +49,8 @@ def prepare_config_db():
     #TODO need to generate configuration path according to program path
     params.append(config.ConfigParameter('config_file',
             defaults = 'settings.conf',
-            help='specify configuration file',
+            help=''''specify configuration file, use `settings.conf`
+                in installation directory by default.''',
             loader_srcs=['cli', 'defload'],
             loader_opts={'cli':{
                 'flags':('--config-file',),
@@ -476,14 +477,19 @@ def load_config(configdb, args = None):
     if run_config.generate_config:
         generate_config_file(configdb, run_config)
 
-    try:
-        conf_config = config.from_file(configdb, run_config.config_file)
-    except config.ConfigFileLoader.ConfigValueError as err:
-        _logger.error(err)
-        sysexit(1)
+    config_file = run_config.config_file
+    if not isfile(config_file):
+        _logger.warning("can't find config file %s, use default settings and cli settings",
+                config_file)
+    else:
+        try:
+            conf_config = config.from_file(configdb, run_config.config_file)
+        except config.ConfigFileLoader.ConfigValueError as err:
+            _logger.error(err)
+            sysexit(1)
 
-    _logger.debug('config file parsed:\n\t%s', config.pretty(conf_config, '\n\t'))
-    run_config = config.merge_config(run_config, conf_config)
+        _logger.debug('config file parsed:\n\t%s', config.pretty(conf_config, '\n\t'))
+        run_config = config.merge_config(run_config, conf_config)
 
     # override saved settings again with cli options again, because we want
     # command line options to take higher priority

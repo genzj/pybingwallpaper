@@ -53,7 +53,8 @@ You can edit the configuration to adjust features.
       -h, --help            show this help message and exit
       -v, --version         show version information
       --config-file CONFIG_FILE
-                            specify configuration file
+                            specify configuration file, use 'settings.conf'
+                            in installation directory by default.
       --generate-config     generate a configuration file containing arguments
                             specified in command line and exit. to generate
                             default config file, issue without other command
