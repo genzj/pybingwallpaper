@@ -151,7 +151,8 @@ SectionGroup $(NAME_SecGrCountry) SecGrCountry
 SectionGroupEnd
 
 Section "-generate configuration file"
-  ExecWait '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
+  IfFileExists "$INSTDIR\settings.conf" +2 0
+    ExecWait '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
 SectionEnd
 
 Section $(NAME_SecStartMenu) SecStartMenu
@@ -192,6 +193,9 @@ SectionEnd
   LangString DESC_SecStartup ${LANG_ENGLISH} "Auto run ${PROGRAM_NAME} at Windows startup (network connection at startup is required)"
   LangString DESC_SecRunit ${LANG_ENGLISH} "Run ${PROGRAM_NAME} and change wallpaper immediately after installation"
   LangString DESC_SecGrCountry ${LANG_ENGLISH} "Bing.com wallpaper may vary from countries. Those countries marked (HD) support high resolution wallpapers(1920x1200)"
+
+  LangString ASK_FOR_CONFIG_DEL1 ${LANG_ENGLISH} "Do you want to remove configuration files in installation path?" 
+  LangString ASK_FOR_CONFIG_DEL2 ${LANG_ENGLISH} "Removed configurations can't be restored, are you sure you want to remove them?" 
   
 
 
@@ -206,6 +210,9 @@ SectionEnd
   LangString DESC_SecStartup ${LANG_SimpChinese} "启动Windows时自动运行${PROGRAM_NAME}（启动时需要访问网络）"
   LangString DESC_SecRunit ${LANG_SimpChinese} "安装完成后启动${PROGRAM_NAME}（需要访问网络）"
   LangString DESC_SecGrCountry ${LANG_SimpChinese} "不同国家访问Bing.com时桌面可能会不同。标有HD的分站支持高分辨率桌面(1920x1200)"
+
+  LangString ASK_FOR_CONFIG_DEL1 ${LANG_SimpChinese} "是否删除安装目录下的所有配置文件？" 
+  LangString ASK_FOR_CONFIG_DEL2 ${LANG_SimpChinese} "配置文件删除后不可恢复！确认删除？" 
 
   ;Assign descriptions to sections
   !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
@@ -267,8 +274,13 @@ Section "Uninstall"
   DeleteRegKey /ifempty HKLM "Software\Genzj"
 
   ; Remove files and uninstaller
-  Delete "$INSTDIR\*.*"
+  Delete "$INSTDIR\*.pyd"
+  Delete "$INSTDIR\*.exe"
+  Delete "$INSTDIR\*.zip"
+  Delete "$INSTDIR\*.dll"
+  Delete "$INSTDIR\bingwallpaper.ico"
   Delete "$INSTDIR\__pycache__\*.*"
+  RMDir /r "$INSTDIR\__pycache__"
 
   ; Remove shortcuts, if any
   Delete "$SMPROGRAMS\${PROGRAM_NAME}\*.*"
@@ -276,8 +288,16 @@ Section "Uninstall"
 
   ; Remove directories used
   RMDir "$SMPROGRAMS\${PROGRAM_NAME}"
-  RMDir /r "$INSTDIR"
 
+  MessageBox MB_YESNO|MB_DEFBUTTON2 $(ASK_FOR_CONFIG_DEL1) /SD IDNO IDYES askagain IDNO keepconfig
+askagain:
+  MessageBox MB_YESNO|MB_DEFBUTTON2 $(ASK_FOR_CONFIG_DEL2) IDYES delall IDNO keepconfig
+delall:
+  Delete "$INSTDIR\*.*"
+  RMDir /r "$INSTDIR"
+  Quit
+keepconfig:
+  DetailPrint "keep user configurations in $INSTDIR"
 SectionEnd
 
 ;--------------------------------
@@ -306,6 +326,10 @@ Function .onInit
   StrCpy $COUNTRY_CODE "us"
   StrCpy $COUNTRY_CHOSEN ${country_us}
   Call upgrade
+  !insertmacro MUI_LANGDLL_DISPLAY
+FunctionEnd
+
+Function un.onInit
   !insertmacro MUI_LANGDLL_DISPLAY
 FunctionEnd
 
