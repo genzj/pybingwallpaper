@@ -165,7 +165,7 @@ def prepare_config_db():
             ))
 
     params.append(config.ConfigParameter('size_mode', defaults='prefer',
-            choices=('prefer', 'highest', 'insist', 'manual', 'never'),
+            choices=('prefer', 'collect', 'highest', 'insist', 'manual', 'never'),
             help='''set selecting strategy when wallpapers in different 
                     size are available (normally 1920x1200 and 1366x768).
                     `prefer` (default) uses high resolution if it's 
@@ -178,7 +178,13 @@ def prepare_config_db():
                     `highest` use the highest available resolution, that
                     is, 1920x1200 for HD sites, 1920x1080 for others;
                     `never` always use normal resolution;
-                    `manual` use resolution specified in `--image-size`''',
+                    `manual` use resolution specified in `--image-size`
+                    `collect` acts exactly as highest in most of cases, 
+                    however it will also download the picture with Chinese
+                    bing logo if the picture is ROW and in the size of 1920x1200
+                    (try --market=en-ww). In collect mode, only the first
+                    picture (usually the one with English bing logo) 
+                    will be set as wallpaper.''',
             loader_opts={'cli':{
                 'flags':('-m', '--size-mode'),
                 }, 'conffile':{
@@ -322,9 +328,11 @@ def download_wallpaper(run_config):
     if not s.loaded():
         _logger.error('can not load url %s. aborting...', s.url)
         raise CannotLoadImagePage(s)
-    for wplink, info in s.image_links():
-        outfile = get_output_filename(run_config, wplink)
-        rec = record.default_manager.get_by_url(wplink)
+    for wplinks, info in s.image_links():
+        _logger.info('%s photo list: %s', info, wplinks)
+        mainlink = wplinks[0]
+        outfile = get_output_filename(run_config, mainlink)
+        rec = record.default_manager.get_by_url(mainlink)
         _logger.debug('%s', rec)
 
         if outfile == rec['local_file']:
@@ -335,16 +343,29 @@ def download_wallpaper(run_config):
                 _logger.info('file has been downloaded before, redownload it')
 
         _logger.info('download photo of "%s"', info)
-        picture_content = webutil.loadurl(wplink)
-        if picture_content:
-            with open(outfile, 'wb') as of:
-                of.write(picture_content)
-                _logger.info('file saved %s', outfile)
-            r = record.DownloadRecord(wplink, outfile)
-            return r
+        if not save_a_picture(mainlink, info, outfile):
+            continue
+        collect_accompanying_pictures(wplinks[1:], info, run_config.output_folder)
+        r = record.DownloadRecord(mainlink, outfile)
+        return r
         
     _logger.info('bad luck, no wallpaper today:(')
     return None
+
+def collect_accompanying_pictures(wplinks, info, output_folder):
+    for link in wplinks:
+        filename = pathjoin(output_folder, basename(link))
+        _logger.info('download accompanying photo of "%s" from %s to %s', 
+                        info, link, output_folder)
+        save_a_picture(link, info, filename)
+
+def save_a_picture(pic_url, info, outfile):
+    picture_content = webutil.loadurl(pic_url)
+    if picture_content:
+        with open(outfile, 'wb') as of:
+            of.write(picture_content)
+            _logger.info('file saved %s', outfile)
+    return bool(picture_content)
 
 def get_output_filename(run_config, link):
     filename = basename(link)

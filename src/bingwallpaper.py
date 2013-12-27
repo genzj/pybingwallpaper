@@ -31,7 +31,7 @@ class PreferHighResolution(HighResolutionSetting):
         else:
             wplink = webutil.urljoin(rooturl, fallbackurl)
             _logger.debug('in prefer mode, get normal resolution url %s', wplink)
-        return wplink
+        return (wplink,)
 
 class InsistHighResolution(HighResolutionSetting):
     def getPicUrl(self, rooturl, imgurlbase, fallbackurl, has_wp, *args, **kwargs):
@@ -41,13 +41,13 @@ class InsistHighResolution(HighResolutionSetting):
         else:
             wplink = None
             _logger.debug('in insist mode, drop normal resolution pic')
-        return wplink
+        return (wplink,)
 
 class NeverHighResolution(HighResolutionSetting):
     def getPicUrl(self, rooturl, imgurlbase, fallbackurl, has_wp, *args, **kwargs):
         wplink = webutil.urljoin(rooturl, fallbackurl)
         _logger.debug('never use high resolution, use %s', wplink)
-        return wplink
+        return (wplink,)
 
 class HighestResolution(HighResolutionSetting):
     def getPicUrl(self, rooturl, imgurlbase, fallbackurl, has_wp, *args, **kwargs):
@@ -57,7 +57,7 @@ class HighestResolution(HighResolutionSetting):
         else:
             wplink = webutil.urljoin(rooturl, '_'.join([imgurlbase,'1920x1080.jpg'])) 
             _logger.debug('not support wallpaper, use second highest resolution %s', wplink)
-        return wplink
+        return (wplink,)
 
 class ManualHighResolution(HighResolutionSetting):
     def getPicUrl(self, rooturl, imgurlbase, fallbackurl, has_wp, resolution):
@@ -66,13 +66,27 @@ class ManualHighResolution(HighResolutionSetting):
             raise ValueError('invalid resolution "%s"'%(resolution, ))
         wplink = webutil.urljoin(rooturl, ''.join([imgurlbase, '_', resolution, '.jpg'])) 
         _logger.debug('manually specify resolution, use %s', wplink)
-        return wplink
+        return (wplink,)
+
+class CollectResolutions(HighestResolution):
+    def getPicUrl(self, rooturl, imgurlbase, fallbackurl, has_wp, *args, **kwargs):
+        wplink = HighestResolution.getPicUrl(
+                    self, rooturl, imgurlbase, fallbackurl, has_wp, *args, **kwargs
+                 )[0]
+        if '_ROW' in wplink and '_1920x1200' in wplink and '_ZH_' not in wplink:
+            _logger.debug('%s may have a Chinese brother', wplink)
+            zhlink = wplink.replace('_1920x1200', '_ZH_1920x1200')
+            return (wplink, zhlink)
+        else:
+            _logger.debug('no chinese logo for %s', wplink)
+            return (wplink,)
 
 HighResolutionSetting.settings['prefer'] = PreferHighResolution
 HighResolutionSetting.settings['insist'] = InsistHighResolution
 HighResolutionSetting.settings['never'] = NeverHighResolution
 HighResolutionSetting.settings['highest'] = HighestResolution
 HighResolutionSetting.settings['manual'] = ManualHighResolution
+HighResolutionSetting.settings['collect'] = CollectResolutions
 
 class BingWallpaperPage:
     BASE_URL='http://www.bing.com'
