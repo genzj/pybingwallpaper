@@ -15,6 +15,10 @@ be found [here](https://github.com/genzj/pyngwallpaper)
 #### Windows
 
 Download installer from any of following links and install it.
+<font color="red">
+**Note: Please backup the `settings.conf` under the installation path before upgrading!**
+**注意：升级前请备份安装目录下的`settings.conf`文件！**
+</font>
 A shortcut will be created in your startup folder.
 
 * [from dropbox](https://www.dropbox.com/s/butd3dgxr98671t/pybingwp-1-4-3.exe) 
