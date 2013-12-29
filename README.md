@@ -15,10 +15,12 @@ be found [here](https://github.com/genzj/pyngwallpaper)
 #### Windows
 
 Download installer from any of following links and install it.
+
 <font color="red">
-**Note: Please backup the `settings.conf` under the installation path before upgrading!**
-**注意：升级前请备份安装目录下的`settings.conf`文件！**
+<p>**Note: Please backup the `settings.conf` under the installation path before upgrading!**</p>
+<p>**注意：升级前请备份安装目录下的`settings.conf`文件！**</p>
 </font>
+
 A shortcut will be created in your startup folder.
 
 * [from dropbox](https://www.dropbox.com/s/butd3dgxr98671t/pybingwp-1-4-3.exe) 
@@ -38,6 +40,24 @@ then *add* a startup program with:
     Comment: download and update wallpaper!
 
 You can also append arguments in *Command* box.
+
+----------
+
+### Donation
+
+If you like this tool, consider buying a cup of coffee for nocturnal coders. **This tool is totally free.  Donation will NOT add any additonal features.**
+
+Donate with PayPal USD
+
+[![PayPal - The safer, easier way to pay online!](https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=53RDZJBEJMD6W&lc=C2&item_name=Donate%20genzj%20for%20pybingwallpaper&button_subtype=services&currency_code=USD&bn=PP%2dBuyNowBF%3abtn_buynowCC_LG%2egif%3aNonHosted)
+
+Donate with PayPal EUR
+
+[![PayPal - The safer, easier way to pay online!](https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=53RDZJBEJMD6W&lc=US&item_name=Donate%20genzj%20for%20pybingwallpaper&button_subtype=services&currency_code=EUR&bn=PP%2dBuyNowBF%3abtn_paynowCC_LG%2egif%3aNonHosted)
+
+如果喜欢本软件，请考虑给我们昼伏夜出的码农捐助一杯咖啡吧！**软件及其所有功能均为免费且无广告，是否捐助不影响使用。**
+
+[![使用支付宝付款](https://img.alipay.com/sys/personalprod/style/mc/btn-index.png)](http://me.alipay.com/genzj)
 
 ----------
 
@@ -151,14 +171,6 @@ You can also append arguments in *Command* box.
                             Windows XP or 'C:/Users/<your-
                             username>/MyBingWallpapers' in Windows 7 by default
     
-
-----------
-
-### Devolopment
-
-#### Customized wallpaper setter
-(TBD)
-
 ----------
 
 ### Release Note
