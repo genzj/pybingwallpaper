@@ -294,6 +294,18 @@ def prepare_config_db():
                 'section':'Download',
                 }}
             ))
+
+    params.append(config.ConfigParameter('database_file',
+            defaults='',
+            help='''specify the sqlite3 database used to store meta info of photos.
+                    leave it blank to disable database storage.
+                ''',
+            loader_opts={'cli':{
+                'flags':('--database-file',),
+                }, 'conffile':{
+                'section':'Database',
+                }}
+            ))
     for p in params:
         configdb.add_param(p)
     return configdb
@@ -306,6 +318,7 @@ def prepare_output_dir(d):
         _logger.critical('can not create output folder %s', d)
 
 def download_wallpaper(run_config):
+    records = list()
     idx = run_config.offset
     country_code = None if run_config.country == 'auto' else run_config.country
     market_code = None if not run_config.market else run_config.market
@@ -343,21 +356,26 @@ def download_wallpaper(run_config):
                 _logger.info('file has been downloaded before, redownload it')
 
         _logger.info('download photo of "%s"', info)
-        if not save_a_picture(mainlink, info, outfile):
-            continue
-        collect_accompanying_pictures(wplinks[1:], info, run_config.output_folder)
-        r = record.DownloadRecord(mainlink, outfile)
-        return r
+        raw = save_a_picture(mainlink, info, outfile)
+        if not raw: continue
+        r = record.DownloadRecord(mainlink, outfile, info, raw=raw)
+        records.append(r)
+        collect_accompanying_pictures(wplinks[1:], info, run_config.output_folder, records)
+        return records
         
     _logger.info('bad luck, no wallpaper today:(')
     return None
 
-def collect_accompanying_pictures(wplinks, info, output_folder):
+def collect_accompanying_pictures(wplinks, info, output_folder, records):
     for link in wplinks:
         filename = pathjoin(output_folder, basename(link))
         _logger.info('download accompanying photo of "%s" from %s to %s', 
                         info, link, output_folder)
-        save_a_picture(link, info, filename)
+        raw = save_a_picture(link, info, filename)
+        if raw:
+            r = record.DownloadRecord(link, filename, info, raw=raw, is_accompany=True)
+            records.append(r)
+
 
 def save_a_picture(pic_url, info, outfile):
     picture_content = webutil.loadurl(pic_url)
@@ -365,7 +383,7 @@ def save_a_picture(pic_url, info, outfile):
         with open(outfile, 'wb') as of:
             of.write(picture_content)
             _logger.info('file saved %s', outfile)
-    return bool(picture_content)
+    return picture_content
 
 def get_output_filename(run_config, link):
     filename = basename(link)
@@ -384,10 +402,11 @@ def load_history():
         record.default_manager.load(f)
         f.close()
 
-def save_history(r, keepold=False):
+def save_history(records, keepold=False):
+    last_record = records[0]
     if not keepold:
         record.default_manager.clear()
-    record.default_manager.add(r)
+    record.default_manager.add(last_record)
     try:
         f = open(HISTORY_FILE, 'w')
         f.truncate(0)
@@ -397,6 +416,19 @@ def save_history(r, keepold=False):
     else:
         record.default_manager.save(f)
         f.close()
+
+    if not run_config.database_file:
+        return
+
+    rm = record.SqlDatabaseRecordManager('database %s' % (run_config.database_file,))
+    for r in records:
+        rm.add(r)
+
+    try:
+        rm.save(run_config.database_file)
+    except Exception:
+        _logger.error('error occurs when store records into database %s', run_config.database_file,
+                        exc_info=1)
 
 def set_debug_details(level):
     if not level:
@@ -420,25 +452,28 @@ def main(daemon=None):
     load_history()
     install_proxy(run_config)
     try:
-        filerecord = download_wallpaper(run_config)
+        filerecords = download_wallpaper(run_config)
     except CannotLoadImagePage:
         if not run_config.foreground and run_config.background and daemon:
             _logger.info("network error happened, daemon will retry in 60 seconds")
             timeout = 60
         else:
             _logger.info("network error happened. please retry after Internet connection restore.")
-        filerecord = None
+        filerecords = None
     else:
         timeout = run_config.interval*3600
 
-    if filerecord:
-        save_history(filerecord)
-    if not filerecord or run_config.setter == 'no':
+    if filerecords:
+        save_history(filerecords)
+    if not filerecords or run_config.setter == 'no':
         _logger.info('nothing to set')
     else:
         s = setter.get(run_config.setter)()
-        _logger.info('setting wallpaper %s', filerecord['local_file'])
-        s.set(filerecord['local_file'], run_config.setter_args)
+        # use the first image as wallpaper, accompanying images are just
+        # to fulfill your collection
+        wallpaper_record = filerecords[0]
+        _logger.info('setting wallpaper %s', wallpaper_record['local_file'])
+        s.set(wallpaper_record['local_file'], run_config.setter_args)
         _logger.info('all done. enjoy your new wallpaper')
 
     if not run_config.foreground and run_config.background and daemon:
