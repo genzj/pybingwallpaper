@@ -21,12 +21,11 @@ Download installer from any of following links and install it.
 <p>**注意：升级前请备份安装目录下的`settings.conf`文件！**</p>
 </font>
 
-A shortcut will be created in your startup folder.
+**Latest Release 1.4.4-b01**
+* [from dropbox](https://www.dropbox.com/s/sq9bhzu4x1mg71y/pybingwp-1-4-4b01.exe) 
+* [Baidu Disk(百度盘)](http://pan.baidu.com/s/1mgqMvUC) 
 
-* [from dropbox](https://www.dropbox.com/s/butd3dgxr98671t/pybingwp-1-4-3.exe) 
-* [Baidu Disk(百度盘)](http://pan.baidu.com/s/1eQBUD9o) 
-
-You can edit the configuration to adjust features.
+A shortcut will be created in your startup folder. You can edit the configuration to adjust features.
 
 #### Linux with Gnome
 You just need to add a startup application:
@@ -55,7 +54,7 @@ Donate with PayPal EUR
 
 [![PayPal - The safer, easier way to pay online!](https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=53RDZJBEJMD6W&lc=US&item_name=Donate%20genzj%20for%20pybingwallpaper&button_subtype=services&currency_code=EUR&bn=PP%2dBuyNowBF%3abtn_paynowCC_LG%2egif%3aNonHosted)
 
-如果喜欢本软件，请考虑给我们昼伏夜出的码农捐助一杯咖啡吧！**软件及其所有功能均为免费且无广告，是否捐助不影响使用。**
+如果喜欢本软件，请考虑给我们昼伏夜出的码农捐助一杯咖啡吧！**软件及其所有功能均为免费且无广告，捐助与否不影响使用。**
 
 [![使用支付宝付款](https://img.alipay.com/sys/personalprod/style/mc/btn-index.png)](http://me.alipay.com/genzj)
 
@@ -107,6 +106,9 @@ Donate with PayPal EUR
                             instead of country. Market code should be specified in
                             format 'xy-ab' such as en-us. Note: specify this
                             parameter will override any settings to --country.
+      --database-file DATABASE_FILE
+                            specify the sqlite3 database used to store meta info
+                            of photos. leave it blank to disable database storage.
       -d, --debug           enable debug outputs. The more --debug the more
                             detailed the log will be
       -i INTERVAL, --interval INTERVAL
@@ -174,6 +176,9 @@ Donate with PayPal EUR
 ----------
 
 ### Release Note
+* **2014-04-18 1.4.4**
+    * Support download records database (#18), you can build you own bing album now. 
+
 * **2013-12-24 1.4.3**
     * Fix #13 enhance robustness of network connection status: retry in
       60 seconds after network failure 
