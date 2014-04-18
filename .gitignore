@@ -51,3 +51,6 @@ pybingwp-*.exe
 
 # config file
 settings.conf
+
+# database record
+*.db
