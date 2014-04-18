@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import log
 import json
-import time
 import datetime
 import sqlite3
 from os.path import isfile
@@ -14,7 +13,7 @@ class DownloadRecord(dict):
     def __init__(self, url, local_file, description, download_time=None, raw=None, is_accompany=False):
         UserDict.__init__(self)
         if download_time is None:
-            download_time = datetime.datetime.fromtimestamp(time.time())
+            download_time = datetime.datetime.utcnow()
         timestr = download_time.isoformat()
 
         self['url'] = url
