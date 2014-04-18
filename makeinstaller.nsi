@@ -24,7 +24,7 @@
 Name ${PROGRAM_NAME}
 
 ; The file to write
-OutFile "pybingwp-1-4-3.exe"
+OutFile "pybingwp-1-4-4b01.exe"
 
 ; The default installation directory
 InstallDir $PROGRAMFILES\Genzj\${PROGRAM_NAME}
