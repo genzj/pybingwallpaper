@@ -90,7 +90,7 @@ HighResolutionSetting.settings['collect'] = CollectResolutions
 
 class BingWallpaperPage:
     BASE_URL='http://www.bing.com'
-    IMAGE_API='/HPImageArchive.aspx?format=js&idx={idx}&n={n}'
+    IMAGE_API='/HPImageArchive.aspx?format=js&mbl=1&idx={idx}&n={n}'
     def __init__(self, idx, n=1, base=BASE_URL, api=IMAGE_API, country_code=None, 
                 market_code=None, high_resolution = PreferHighResolution, resolution='1920x1200'):
         self.idx = idx
@@ -130,18 +130,32 @@ class BingWallpaperPage:
         _logger.debug(self.content)
 
         self.__images = self.content['images']
+        if 'market' in self.content and 'mkt' in self.content['market']:
+            self.act_market = self.content['market']['mkt']
         self._update_img_link()
 
         return True
 
+    def _get_metadata(self, i):
+        metadata = dict()
+        metafield = [
+                'copyright', 'startdate', 'copyrightlink', 'hsh'
+                ]
+        for f in metafield:
+            metadata[f] = i.get(f, None)
+        metadata['market'] = self.act_market
+
+        return metadata
+
     def _update_img_link(self):
         self.wplinks.clear()
         for i in self.__images:
+            metadata = self._get_metadata(i)
             has_wp = i.get('wp', False)
-            _logger.debug('handling %s, rooturl=%s, imgurlbase=%s, has_wp=%s, resolution=%s', 
-                        i['url'], self.base, i['urlbase'], has_wp, self.resolution)
+            _logger.debug('handling %s, rooturl=%s, imgurlbase=%s, has_wp=%s, resolution=%s, act_market=%s', 
+                        i['url'], self.base, i['urlbase'], has_wp, self.resolution, self.act_market)
             wplink = self.high_resolution().getPicUrl(self.base, i['urlbase'], i['url'], has_wp, self.resolution)
-            if wplink: self.wplinks.append((wplink, i['copyright']))
+            if wplink: self.wplinks.append((wplink, metadata))
 
     def load(self):
         self.reset()

@@ -355,12 +355,13 @@ def download_wallpaper(run_config):
     if not s.loaded():
         _logger.error('can not load url %s. aborting...', s.url)
         raise CannotLoadImagePage(s)
-    for wplinks, info in s.image_links():
-        _logger.info('%s photo list: %s', info, wplinks)
+    for wplinks, metadata in s.image_links():
+        _logger.debug('%s photo list: %s', metadata, wplinks)
         mainlink = wplinks[0]
+        copyright = metadata['copyright']
         outfile = get_output_filename(run_config, mainlink)
         rec = record.default_manager.get_by_url(mainlink)
-        _logger.debug('%s', rec)
+        _logger.debug('related download records: %s', rec)
 
         if outfile == rec['local_file']:
             if not run_config.redownload:
@@ -369,28 +370,31 @@ def download_wallpaper(run_config):
             else:
                 _logger.info('file has been downloaded before, redownload it')
 
-        _logger.info('download photo of "%s"', info)
-        raw = save_a_picture(mainlink, info, outfile)
+        _logger.info('download photo of "%s"', copyright)
+        raw = save_a_picture(mainlink, copyright, outfile)
         if not raw: continue
-        r = record.DownloadRecord(mainlink, outfile, info,
-                                    raw=None if run_config.database_no_image else raw)
+        r = record.DownloadRecord(mainlink, outfile, copyright,
+                                    raw=None if run_config.database_no_image else raw,
+                                    market=metadata['market'])
         records.append(r)
-        collect_accompanying_pictures(wplinks[1:], info, run_config.output_folder, records)
+        collect_accompanying_pictures(wplinks[1:], metadata, run_config.output_folder, records)
         return records
         
     _logger.info('bad luck, no wallpaper today:(')
     return None
 
-def collect_accompanying_pictures(wplinks, info, output_folder, records):
+def collect_accompanying_pictures(wplinks, metadata, output_folder, records):
+    copyright = metadata['copyright']
+    market = metadata['market']
     for link in wplinks:
         filename = pathjoin(output_folder, basename(link))
         _logger.info('download accompanying photo of "%s" from %s to %s', 
-                        info, link, output_folder)
-        raw = save_a_picture(link, info, filename)
+                        copyright, link, output_folder)
+        raw = save_a_picture(link, copyright, filename)
         if raw:
-            r = record.DownloadRecord(link, filename, info,
+            r = record.DownloadRecord(link, filename, copyright,
                                         raw=None if run_config.database_no_image else raw,
-                                        is_accompany=True)
+                                        is_accompany=True, market=market)
             records.append(r)
 
 def save_a_picture(pic_url, info, outfile):
