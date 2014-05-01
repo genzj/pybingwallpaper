@@ -306,6 +306,20 @@ def prepare_config_db():
                 'section':'Database',
                 }}
             ))
+
+    params.append(config.ConfigParameter('database_no_image',
+            defaults=False,
+            help='''images will be embedded into database by default. Exclude
+                    images from database can reduce the size of database file.
+                ''',
+            loader_opts={'cli':{
+                'flags':('--database-no-image',),
+                'action':'store_false',
+                }, 'conffile':{
+                'section':'Database',
+                'converter':config.str_to_bool
+                }}
+            ))
     for p in params:
         configdb.add_param(p)
     return configdb
@@ -358,7 +372,8 @@ def download_wallpaper(run_config):
         _logger.info('download photo of "%s"', info)
         raw = save_a_picture(mainlink, info, outfile)
         if not raw: continue
-        r = record.DownloadRecord(mainlink, outfile, info, raw=raw)
+        r = record.DownloadRecord(mainlink, outfile, info,
+                                    raw=None if run_config.database_no_image else raw)
         records.append(r)
         collect_accompanying_pictures(wplinks[1:], info, run_config.output_folder, records)
         return records
@@ -373,9 +388,10 @@ def collect_accompanying_pictures(wplinks, info, output_folder, records):
                         info, link, output_folder)
         raw = save_a_picture(link, info, filename)
         if raw:
-            r = record.DownloadRecord(link, filename, info, raw=raw, is_accompany=True)
+            r = record.DownloadRecord(link, filename, info,
+                                        raw=None if run_config.database_no_image else raw,
+                                        is_accompany=True)
             records.append(r)
-
 
 def save_a_picture(pic_url, info, outfile):
     picture_content = webutil.loadurl(pic_url)
