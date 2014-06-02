@@ -24,7 +24,7 @@ Download installer from any of following links and install it.
 A shortcut will be created in your startup folder.
 
 * [from dropbox](https://www.dropbox.com/s/butd3dgxr98671t/pybingwp-1-4-3.exe) 
-* [Baidu Disk(百度盘)](http://pan.baidu.com/s/1eQBUD9o) 
+* [Baidu Disk(百度盘)](http://pan.baidu.com/s/1gdmVmkr) 
 
 You can edit the configuration to adjust features.
 
