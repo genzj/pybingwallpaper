@@ -343,7 +343,7 @@ def prepare_config_db():
         url = ('http://'+s) \
             if s and not urlparse(s).scheme \
             else s
-        return url+'/' if not url.endswith('/') else url
+        return url+'/' if url and not url.endswith('/') else url
     params.append(config.ConfigParameter('customserver', defaults='',
             type=url,
             help='''specify server used for meta data and wallpaper photo.
@@ -622,9 +622,11 @@ def install_proxy(config):
         _logger.info('user specified proxy: "%s:%s"', config.proxy_server, config.proxy_port)
         _logger.debug('proxy username: "%s" password: "%s"', config.proxy_username, hidden_password)
     PROXY_SITES_PROTOCOL = ('http', 'https')
-    PROXY_SITES = ('bing.com', 'www.bing.com', 'cn.bing.com', 'nz.bing.com')
+    PROXY_SITES = ('bing.com', 'www.bing.com', 'cn.bing.com', 'nz.bing.com', 's.cn.bing.net')
 
     proxy_sites = [p+'://'+s for p, s in product(('http', 'https'), PROXY_SITES)]
+    if config.customserver and config.customserver not in proxy_sites:
+        proxy_sites += (config.customserver, )
     webutil.setup_proxy(PROXY_SITES_PROTOCOL, config.proxy_server, config.proxy_port,
                             proxy_sites, config.proxy_username, config.proxy_password)
 
