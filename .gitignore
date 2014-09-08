@@ -54,3 +54,4 @@ settings.conf
 
 # database record
 *.db
+.ropeproject/
