@@ -32,10 +32,10 @@ def prepare_config_db():
 
     setters = load_setters()
 
-    configdb = config.ConfigDatabase(prog=NAME, 
+    configdb = config.ConfigDatabase(prog=NAME,
             description='Download the wallpaper offered by Bing.com '
             +'and set it current wallpaper background.')
-    
+
     params.append(config.ConfigParameter('version',
             help='show version information',
             loader_srcs=['cli'],
@@ -85,7 +85,7 @@ def prepare_config_db():
 
     params.append(config.ConfigParameter('foreground',
             defaults=False,
-            help='''force working in foreground mode to cancel 
+            help='''force working in foreground mode to cancel
             the effect of `background` in config file.''',
             loader_srcs=['cli', 'defload'],
             loader_opts={'cli':{
@@ -95,10 +95,10 @@ def prepare_config_db():
             ))
 
     params.append(config.ConfigParameter('country', defaults='auto',
-            choices=('au', 'br', 'ca', 'cn', 'de', 'fr', 'jp', 'nz', 'us', 'uk', 'auto'), 
+            choices=('au', 'br', 'ca', 'cn', 'de', 'fr', 'jp', 'nz', 'us', 'uk', 'auto'),
             help='''select country code sent to bing.com.
             bing.com in different countries may show different
-            backgrounds. 
+            backgrounds.
             au: Australia  br: Brazil  ca: Canada  cn: China  de:Germany
             fr: France  jp: Japan  nz: New Zealand  us: USA  uk: United Kingdom
             auto: select country according to your IP address (by Bing.com)
@@ -125,7 +125,7 @@ def prepare_config_db():
                 }}
             ))
     params.append(config.ConfigParameter('debug', defaults=0,
-            help='''enable debug outputs. 
+            help='''enable debug outputs.
             The more --debug the more detailed the log will be''',
             loader_opts={'cli':{
                 'flags':('-d', '--debug'),
@@ -141,7 +141,7 @@ def prepare_config_db():
 
     params.append(config.ConfigParameter('interval',
             type=convert_interval, defaults=2,
-            help='''interval between each two wallpaper checkings 
+            help='''interval between each two wallpaper checkings
                     in unit of hours. applicable only in `background` mode.
                     at lease 1 hour; 2 hours by default.''',
             loader_opts={'cli':{
@@ -166,11 +166,11 @@ def prepare_config_db():
 
     params.append(config.ConfigParameter('size_mode', defaults='prefer',
             choices=('prefer', 'collect', 'highest', 'insist', 'manual', 'never'),
-            help='''set selecting strategy when wallpapers in different 
+            help='''set selecting strategy when wallpapers in different
                     size are available (normally 1920x1200 and 1366x768).
-                    `prefer` (default) uses high resolution if it's 
+                    `prefer` (default) uses high resolution if it's
                     available, otherwise downloads normal resolution;
-                    `insist` always use high resolution and ignore 
+                    `insist` always use high resolution and ignore
                     other pictures (Note: some countries have only
                     normal size wallpapers, if `insist` is adopted
                     with those sites, no wallpaper can be downloaded,
@@ -179,11 +179,11 @@ def prepare_config_db():
                     is, 1920x1200 for HD sites, 1920x1080 for others;
                     `never` always use normal resolution;
                     `manual` use resolution specified in `--image-size`
-                    `collect` acts exactly as highest in most of cases, 
+                    `collect` acts exactly as highest in most of cases,
                     however it will also download the picture with Chinese
                     bing logo if the picture is ROW and in the size of 1920x1200
                     (try --market=en-ww). In collect mode, only the first
-                    picture (usually the one with English bing logo) 
+                    picture (usually the one with English bing logo)
                     will be set as wallpaper.''',
             loader_opts={'cli':{
                 'flags':('-m', '--size-mode'),
@@ -283,9 +283,9 @@ def prepare_config_db():
     params.append(config.ConfigParameter('output_folder',
             defaults=pathjoin(expanduser('~'), 'MyBingWallpapers'),
             help='''specify the folder to store photos.
-                    Use '~/MyBingWallpapers' folder in Linux, 
-                    'C:/Documents and Settings/<your-username>/MyBingWallpapers 
-                    in Windows XP or 'C:/Users/<your-username>/MyBingWallpapers' 
+                    Use '~/MyBingWallpapers' folder in Linux,
+                    'C:/Documents and Settings/<your-username>/MyBingWallpapers
+                    in Windows XP or 'C:/Users/<your-username>/MyBingWallpapers'
                     in Windows 7 by default
                 ''',
             loader_opts={'cli':{
@@ -320,6 +320,42 @@ def prepare_config_db():
                 'converter':config.str_to_bool
                 }}
             ))
+
+    params.append(config.ConfigParameter('server', defaults='global',
+            choices=('global', 'china', 'custom'),
+            help='''select bing server used for meta data
+            and wallpaper pictures. it seems bing.com uses different
+            servers and domain names in china.
+            global: use bing.com of course.
+            china:  use s.cn.bing.net. (note: use this may freeze market
+                    or country to China zh-CN)
+            custom: use the server specified in option "customserver"
+            ''',
+            loader_opts={'cli':{
+                'flags':('--server', ),
+                }, 'conffile':{
+                'section':'Download',
+                }}
+            ))
+
+    def url(s):
+        from urllib.parse import urlparse
+        url = ('http://'+s) \
+            if s and not urlparse(s).scheme \
+            else s
+        return url+'/' if not url.endswith('/') else url
+    params.append(config.ConfigParameter('customserver', defaults='',
+            type=url,
+            help='''specify server used for meta data and wallpaper photo.
+            you need to set --server to 'custom' to enable the custom server
+            address.''',
+            loader_opts={'cli':{
+                'flags':('--custom-server',),
+                }, 'conffile':{
+                'section':'Download',
+                }}
+            ))
+
     for p in params:
         configdb.add_param(p)
     return configdb
@@ -336,8 +372,12 @@ def download_wallpaper(run_config):
     idx = run_config.offset
     country_code = None if run_config.country == 'auto' else run_config.country
     market_code = None if not run_config.market else run_config.market
+    base_url = 'http://www.bing.com' if run_config.server == 'global' else \
+              'http://s.cn.bing.net' if run_config.server == 'china' else \
+              run_config.customserver
     try:
-        s = bingwallpaper.BingWallpaperPage(idx, 
+        s = bingwallpaper.BingWallpaperPage(idx,
+                base = base_url,
                 country_code = country_code,
                 market_code = market_code,
                 high_resolution = bingwallpaper.HighResolutionSetting.getByName(
@@ -379,7 +419,7 @@ def download_wallpaper(run_config):
         records.append(r)
         collect_accompanying_pictures(wplinks[1:], metadata, run_config.output_folder, records)
         return records
-        
+
     _logger.info('bad luck, no wallpaper today:(')
     return None
 
@@ -388,7 +428,7 @@ def collect_accompanying_pictures(wplinks, metadata, output_folder, records):
     market = metadata['market']
     for link in wplinks:
         filename = pathjoin(output_folder, basename(link))
-        _logger.info('download accompanying photo of "%s" from %s to %s', 
+        _logger.info('download accompanying photo of "%s" from %s to %s',
                         copyright, link, output_folder)
         raw = save_a_picture(link, copyright, filename)
         if raw:
@@ -415,7 +455,7 @@ def load_history():
     try:
         f = open(HISTORY_FILE, 'r')
     except FileNotFoundError:
-        _logger.info('{} not found, ignore download history'.format(HISTORY_FILE))        
+        _logger.info('{} not found, ignore download history'.format(HISTORY_FILE))
     except Exception:
         _logger.warning('error occurs when recover downloading history', exc_info=1)
     else:
@@ -510,7 +550,7 @@ def schedule_next_poll(timeout, daemon):
 
 def start_daemon():
     daemon = sched.scheduler()
-    
+
     main(daemon)
     _logger.info('daemon %s is running', str(daemon))
     daemon.run()
@@ -561,8 +601,8 @@ def save_config(configdb, run_config, filename=None):
 
 def generate_config_file(configdb, config_content):
     filename = config_content.config_file
-    _logger.info('save following config to file %s:\n\t%s', 
-            filename, 
+    _logger.info('save following config to file %s:\n\t%s',
+            filename,
             config.pretty(config_content, '\n\t'))
     save_config(configdb, config_content, filename)
     sysexit(0)
@@ -576,8 +616,8 @@ def install_proxy(config):
         if len(config.proxy_password) <= 4:
             hidden_password = '*'*len(config.proxy_password)
         else:
-            hidden_password = '%s%s%s'%(config.proxy_password[0], 
-                                        '*'*(len(config.proxy_password)-2), 
+            hidden_password = '%s%s%s'%(config.proxy_password[0],
+                                        '*'*(len(config.proxy_password)-2),
                                         config.proxy_password[-1])
         _logger.info('user specified proxy: "%s:%s"', config.proxy_server, config.proxy_port)
         _logger.debug('proxy username: "%s" password: "%s"', config.proxy_username, hidden_password)
@@ -585,7 +625,7 @@ def install_proxy(config):
     PROXY_SITES = ('bing.com', 'www.bing.com', 'cn.bing.com', 'nz.bing.com')
 
     proxy_sites = [p+'://'+s for p, s in product(('http', 'https'), PROXY_SITES)]
-    webutil.setup_proxy(PROXY_SITES_PROTOCOL, config.proxy_server, config.proxy_port, 
+    webutil.setup_proxy(PROXY_SITES_PROTOCOL, config.proxy_server, config.proxy_port,
                             proxy_sites, config.proxy_username, config.proxy_password)
 
 def get_app_path(appfile=None):
