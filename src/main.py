@@ -12,7 +12,7 @@ import sched
 import config
 
 NAME = 'pybingwallpaper'
-REV  = '1.4.3'
+REV  = '1.4.4'
 LINK = 'https://github.com/genzj/pybingwallpaper'
 HISTORY_FILE = pathjoin(expanduser('~'), 'bing-wallpaper-history.json')
 
@@ -32,10 +32,10 @@ def prepare_config_db():
 
     setters = load_setters()
 
-    configdb = config.ConfigDatabase(prog=NAME, 
+    configdb = config.ConfigDatabase(prog=NAME,
             description='Download the wallpaper offered by Bing.com '
             +'and set it current wallpaper background.')
-    
+
     params.append(config.ConfigParameter('version',
             help='show version information',
             loader_srcs=['cli'],
@@ -85,7 +85,7 @@ def prepare_config_db():
 
     params.append(config.ConfigParameter('foreground',
             defaults=False,
-            help='''force working in foreground mode to cancel 
+            help='''force working in foreground mode to cancel
             the effect of `background` in config file.''',
             loader_srcs=['cli', 'defload'],
             loader_opts={'cli':{
@@ -95,10 +95,10 @@ def prepare_config_db():
             ))
 
     params.append(config.ConfigParameter('country', defaults='auto',
-            choices=('au', 'br', 'ca', 'cn', 'de', 'fr', 'jp', 'nz', 'us', 'uk', 'auto'), 
+            choices=('au', 'br', 'ca', 'cn', 'de', 'fr', 'jp', 'nz', 'us', 'uk', 'auto'),
             help='''select country code sent to bing.com.
             bing.com in different countries may show different
-            backgrounds. 
+            backgrounds.
             au: Australia  br: Brazil  ca: Canada  cn: China  de:Germany
             fr: France  jp: Japan  nz: New Zealand  us: USA  uk: United Kingdom
             auto: select country according to your IP address (by Bing.com)
@@ -125,7 +125,7 @@ def prepare_config_db():
                 }}
             ))
     params.append(config.ConfigParameter('debug', defaults=0,
-            help='''enable debug outputs. 
+            help='''enable debug outputs.
             The more --debug the more detailed the log will be''',
             loader_opts={'cli':{
                 'flags':('-d', '--debug'),
@@ -141,7 +141,7 @@ def prepare_config_db():
 
     params.append(config.ConfigParameter('interval',
             type=convert_interval, defaults=2,
-            help='''interval between each two wallpaper checkings 
+            help='''interval between each two wallpaper checkings
                     in unit of hours. applicable only in `background` mode.
                     at lease 1 hour; 2 hours by default.''',
             loader_opts={'cli':{
@@ -166,11 +166,11 @@ def prepare_config_db():
 
     params.append(config.ConfigParameter('size_mode', defaults='prefer',
             choices=('prefer', 'collect', 'highest', 'insist', 'manual', 'never'),
-            help='''set selecting strategy when wallpapers in different 
+            help='''set selecting strategy when wallpapers in different
                     size are available (normally 1920x1200 and 1366x768).
-                    `prefer` (default) uses high resolution if it's 
+                    `prefer` (default) uses high resolution if it's
                     available, otherwise downloads normal resolution;
-                    `insist` always use high resolution and ignore 
+                    `insist` always use high resolution and ignore
                     other pictures (Note: some countries have only
                     normal size wallpapers, if `insist` is adopted
                     with those sites, no wallpaper can be downloaded,
@@ -179,11 +179,11 @@ def prepare_config_db():
                     is, 1920x1200 for HD sites, 1920x1080 for others;
                     `never` always use normal resolution;
                     `manual` use resolution specified in `--image-size`
-                    `collect` acts exactly as highest in most of cases, 
+                    `collect` acts exactly as highest in most of cases,
                     however it will also download the picture with Chinese
                     bing logo if the picture is ROW and in the size of 1920x1200
                     (try --market=en-ww). In collect mode, only the first
-                    picture (usually the one with English bing logo) 
+                    picture (usually the one with English bing logo)
                     will be set as wallpaper.''',
             loader_opts={'cli':{
                 'flags':('-m', '--size-mode'),
@@ -283,9 +283,9 @@ def prepare_config_db():
     params.append(config.ConfigParameter('output_folder',
             defaults=pathjoin(expanduser('~'), 'MyBingWallpapers'),
             help='''specify the folder to store photos.
-                    Use '~/MyBingWallpapers' folder in Linux, 
-                    'C:/Documents and Settings/<your-username>/MyBingWallpapers 
-                    in Windows XP or 'C:/Users/<your-username>/MyBingWallpapers' 
+                    Use '~/MyBingWallpapers' folder in Linux,
+                    'C:/Documents and Settings/<your-username>/MyBingWallpapers
+                    in Windows XP or 'C:/Users/<your-username>/MyBingWallpapers'
                     in Windows 7 by default
                 ''',
             loader_opts={'cli':{
@@ -294,6 +294,68 @@ def prepare_config_db():
                 'section':'Download',
                 }}
             ))
+
+    params.append(config.ConfigParameter('database_file',
+            defaults='',
+            help='''specify the sqlite3 database used to store meta info of photos.
+                    leave it blank to disable database storage.
+                ''',
+            loader_opts={'cli':{
+                'flags':('--database-file',),
+                }, 'conffile':{
+                'section':'Database',
+                }}
+            ))
+
+    params.append(config.ConfigParameter('database_no_image',
+            defaults=False,
+            help='''images will be embedded into database by default. Exclude
+                    images from database can reduce the size of database file.
+                ''',
+            loader_opts={'cli':{
+                'flags':('--database-no-image',),
+                'action':'store_false',
+                }, 'conffile':{
+                'section':'Database',
+                'converter':config.str_to_bool
+                }}
+            ))
+
+    params.append(config.ConfigParameter('server', defaults='global',
+            choices=('global', 'china', 'custom'),
+            help='''select bing server used for meta data
+            and wallpaper pictures. it seems bing.com uses different
+            servers and domain names in china.
+            global: use bing.com of course.
+            china:  use s.cn.bing.net. (note: use this may freeze market
+                    or country to China zh-CN)
+            custom: use the server specified in option "customserver"
+            ''',
+            loader_opts={'cli':{
+                'flags':('--server', ),
+                }, 'conffile':{
+                'section':'Download',
+                }}
+            ))
+
+    def url(s):
+        from urllib.parse import urlparse
+        url = ('http://'+s) \
+            if s and not urlparse(s).scheme \
+            else s
+        return url+'/' if url and not url.endswith('/') else url
+    params.append(config.ConfigParameter('customserver', defaults='',
+            type=url,
+            help='''specify server used for meta data and wallpaper photo.
+            you need to set --server to 'custom' to enable the custom server
+            address.''',
+            loader_opts={'cli':{
+                'flags':('--custom-server',),
+                }, 'conffile':{
+                'section':'Download',
+                }}
+            ))
+
     for p in params:
         configdb.add_param(p)
     return configdb
@@ -306,11 +368,16 @@ def prepare_output_dir(d):
         _logger.critical('can not create output folder %s', d)
 
 def download_wallpaper(run_config):
+    records = list()
     idx = run_config.offset
     country_code = None if run_config.country == 'auto' else run_config.country
     market_code = None if not run_config.market else run_config.market
+    base_url = 'http://www.bing.com' if run_config.server == 'global' else \
+              'http://s.cn.bing.net' if run_config.server == 'china' else \
+              run_config.customserver
     try:
-        s = bingwallpaper.BingWallpaperPage(idx, 
+        s = bingwallpaper.BingWallpaperPage(idx,
+                base = base_url,
                 country_code = country_code,
                 market_code = market_code,
                 high_resolution = bingwallpaper.HighResolutionSetting.getByName(
@@ -328,12 +395,13 @@ def download_wallpaper(run_config):
     if not s.loaded():
         _logger.error('can not load url %s. aborting...', s.url)
         raise CannotLoadImagePage(s)
-    for wplinks, info in s.image_links():
-        _logger.info('%s photo list: %s', info, wplinks)
+    for wplinks, metadata in s.image_links():
+        _logger.debug('%s photo list: %s', metadata, wplinks)
         mainlink = wplinks[0]
+        copyright = metadata['copyright']
         outfile = get_output_filename(run_config, mainlink)
         rec = record.default_manager.get_by_url(mainlink)
-        _logger.debug('%s', rec)
+        _logger.debug('related download records: %s', rec)
 
         if outfile == rec['local_file']:
             if not run_config.redownload:
@@ -342,22 +410,32 @@ def download_wallpaper(run_config):
             else:
                 _logger.info('file has been downloaded before, redownload it')
 
-        _logger.info('download photo of "%s"', info)
-        if not save_a_picture(mainlink, info, outfile):
-            continue
-        collect_accompanying_pictures(wplinks[1:], info, run_config.output_folder)
-        r = record.DownloadRecord(mainlink, outfile)
-        return r
-        
+        _logger.info('download photo of "%s"', copyright)
+        raw = save_a_picture(mainlink, copyright, outfile)
+        if not raw: continue
+        r = record.DownloadRecord(mainlink, outfile, copyright,
+                                    raw=None if run_config.database_no_image else raw,
+                                    market=metadata['market'])
+        records.append(r)
+        collect_accompanying_pictures(wplinks[1:], metadata, run_config.output_folder, records)
+        return records
+
     _logger.info('bad luck, no wallpaper today:(')
     return None
 
-def collect_accompanying_pictures(wplinks, info, output_folder):
+def collect_accompanying_pictures(wplinks, metadata, output_folder, records):
+    copyright = metadata['copyright']
+    market = metadata['market']
     for link in wplinks:
         filename = pathjoin(output_folder, basename(link))
-        _logger.info('download accompanying photo of "%s" from %s to %s', 
-                        info, link, output_folder)
-        save_a_picture(link, info, filename)
+        _logger.info('download accompanying photo of "%s" from %s to %s',
+                        copyright, link, output_folder)
+        raw = save_a_picture(link, copyright, filename)
+        if raw:
+            r = record.DownloadRecord(link, filename, copyright,
+                                        raw=None if run_config.database_no_image else raw,
+                                        is_accompany=True, market=market)
+            records.append(r)
 
 def save_a_picture(pic_url, info, outfile):
     picture_content = webutil.loadurl(pic_url)
@@ -365,7 +443,7 @@ def save_a_picture(pic_url, info, outfile):
         with open(outfile, 'wb') as of:
             of.write(picture_content)
             _logger.info('file saved %s', outfile)
-    return bool(picture_content)
+    return picture_content
 
 def get_output_filename(run_config, link):
     filename = basename(link)
@@ -377,17 +455,18 @@ def load_history():
     try:
         f = open(HISTORY_FILE, 'r')
     except FileNotFoundError:
-        _logger.info('{} not found, ignore download history'.format(HISTORY_FILE))        
+        _logger.info('{} not found, ignore download history'.format(HISTORY_FILE))
     except Exception:
         _logger.warning('error occurs when recover downloading history', exc_info=1)
     else:
         record.default_manager.load(f)
         f.close()
 
-def save_history(r, keepold=False):
+def save_history(records, keepold=False):
+    last_record = records[0]
     if not keepold:
         record.default_manager.clear()
-    record.default_manager.add(r)
+    record.default_manager.add(last_record)
     try:
         f = open(HISTORY_FILE, 'w')
         f.truncate(0)
@@ -397,6 +476,19 @@ def save_history(r, keepold=False):
     else:
         record.default_manager.save(f)
         f.close()
+
+    if not run_config.database_file:
+        return
+
+    rm = record.SqlDatabaseRecordManager('database %s' % (run_config.database_file,))
+    for r in records:
+        rm.add(r)
+
+    try:
+        rm.save(run_config.database_file)
+    except Exception:
+        _logger.error('error occurs when store records into database %s', run_config.database_file,
+                        exc_info=1)
 
 def set_debug_details(level):
     if not level:
@@ -420,25 +512,28 @@ def main(daemon=None):
     load_history()
     install_proxy(run_config)
     try:
-        filerecord = download_wallpaper(run_config)
+        filerecords = download_wallpaper(run_config)
     except CannotLoadImagePage:
         if not run_config.foreground and run_config.background and daemon:
             _logger.info("network error happened, daemon will retry in 60 seconds")
             timeout = 60
         else:
             _logger.info("network error happened. please retry after Internet connection restore.")
-        filerecord = None
+        filerecords = None
     else:
         timeout = run_config.interval*3600
 
-    if filerecord:
-        save_history(filerecord)
-    if not filerecord or run_config.setter == 'no':
+    if filerecords:
+        save_history(filerecords)
+    if not filerecords or run_config.setter == 'no':
         _logger.info('nothing to set')
     else:
         s = setter.get(run_config.setter)()
-        _logger.info('setting wallpaper %s', filerecord['local_file'])
-        s.set(filerecord['local_file'], run_config.setter_args)
+        # use the first image as wallpaper, accompanying images are just
+        # to fulfill your collection
+        wallpaper_record = filerecords[0]
+        _logger.info('setting wallpaper %s', wallpaper_record['local_file'])
+        s.set(wallpaper_record['local_file'], run_config.setter_args)
         _logger.info('all done. enjoy your new wallpaper')
 
     if not run_config.foreground and run_config.background and daemon:
@@ -455,7 +550,7 @@ def schedule_next_poll(timeout, daemon):
 
 def start_daemon():
     daemon = sched.scheduler()
-    
+
     main(daemon)
     _logger.info('daemon %s is running', str(daemon))
     daemon.run()
@@ -506,8 +601,8 @@ def save_config(configdb, run_config, filename=None):
 
 def generate_config_file(configdb, config_content):
     filename = config_content.config_file
-    _logger.info('save following config to file %s:\n\t%s', 
-            filename, 
+    _logger.info('save following config to file %s:\n\t%s',
+            filename,
             config.pretty(config_content, '\n\t'))
     save_config(configdb, config_content, filename)
     sysexit(0)
@@ -521,16 +616,18 @@ def install_proxy(config):
         if len(config.proxy_password) <= 4:
             hidden_password = '*'*len(config.proxy_password)
         else:
-            hidden_password = '%s%s%s'%(config.proxy_password[0], 
-                                        '*'*(len(config.proxy_password)-2), 
+            hidden_password = '%s%s%s'%(config.proxy_password[0],
+                                        '*'*(len(config.proxy_password)-2),
                                         config.proxy_password[-1])
         _logger.info('user specified proxy: "%s:%s"', config.proxy_server, config.proxy_port)
         _logger.debug('proxy username: "%s" password: "%s"', config.proxy_username, hidden_password)
     PROXY_SITES_PROTOCOL = ('http', 'https')
-    PROXY_SITES = ('bing.com', 'www.bing.com', 'cn.bing.com', 'nz.bing.com')
+    PROXY_SITES = ('bing.com', 'www.bing.com', 'cn.bing.com', 'nz.bing.com', 's.cn.bing.net')
 
     proxy_sites = [p+'://'+s for p, s in product(('http', 'https'), PROXY_SITES)]
-    webutil.setup_proxy(PROXY_SITES_PROTOCOL, config.proxy_server, config.proxy_port, 
+    if config.customserver and config.customserver not in proxy_sites:
+        proxy_sites += (config.customserver, )
+    webutil.setup_proxy(PROXY_SITES_PROTOCOL, config.proxy_server, config.proxy_port,
                             proxy_sites, config.proxy_username, config.proxy_password)
 
 def get_app_path(appfile=None):

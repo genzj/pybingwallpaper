@@ -55,3 +55,7 @@ settings.conf
 # Spyder projects
 .spyderworkspace
 .spyderproject
+
+# database record
+*.db
+.ropeproject/

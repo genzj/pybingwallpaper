@@ -16,17 +16,14 @@ be found [here](https://github.com/genzj/pyngwallpaper)
 
 Download installer from any of following links and install it.
 
-<font color="red">
 <p>**Note: Please backup the `settings.conf` under the installation path before upgrading!**</p>
-<p>**注意：升级前请备份安装目录下的`settings.conf`文件！**</p>
-</font>
+<p>**注意：建议升级前备份安装目录下的`settings.conf`文件！**</p>
 
-A shortcut will be created in your startup folder.
+**Latest Release 1.4.4**
+* [from dropbox](https://www.dropbox.com/s/s0d4mj4ig07x5nb/pybingwp-1-4-4.exe) 
+* [Baidu Disk(百度盘)](http://pan.baidu.com/s/1gdsxbPp) 
 
-* [from dropbox](https://www.dropbox.com/s/butd3dgxr98671t/pybingwp-1-4-3.exe) 
-* [Baidu Disk(百度盘)](http://pan.baidu.com/s/1gdmVmkr) 
-
-You can edit the configuration to adjust features.
+A shortcut will be created in your startup folder. You can edit the configuration to adjust features.
 
 #### Linux with Gnome
 You just need to add a startup application:
@@ -55,22 +52,26 @@ Donate with PayPal EUR
 
 [![PayPal - The safer, easier way to pay online!](https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=53RDZJBEJMD6W&lc=US&item_name=Donate%20genzj%20for%20pybingwallpaper&button_subtype=services&currency_code=EUR&bn=PP%2dBuyNowBF%3abtn_paynowCC_LG%2egif%3aNonHosted)
 
-如果喜欢本软件，请考虑给我们昼伏夜出的码农捐助一杯咖啡吧！**软件及其所有功能均为免费且无广告，是否捐助不影响使用。**
+如果喜欢本软件，请考虑给我们昼伏夜出的码农捐助一杯咖啡吧！**软件及其所有功能均为免费且无广告，捐助与否不影响使用。**
 
 [![使用支付宝付款](https://img.alipay.com/sys/personalprod/style/mc/btn-index.png)](http://me.alipay.com/genzj)
 
 ----------
 
 ### Usage
-
     usage: pybingwallpaper [-h] [-v] [--config-file CONFIG_FILE]
                            [--generate-config] [-b] [--foreground]
                            [-c {au,br,ca,cn,de,fr,jp,nz,us,uk,auto}]
                            [--market MARKET] [-d] [-i INTERVAL] [-k]
-                           [-m {prefer,highest,insist,manual,never}]
-                           [--image-size IMAGE_SIZE] [-o OFFSET] [--redownload]
+                           [-m {prefer,collect,highest,insist,manual,never}]
+                           [--image-size IMAGE_SIZE] [-o OFFSET]
+                           [--proxy-server PROXY_SERVER] [--proxy-port PROXY_PORT]
+                           [--proxy-username PROXY_USERNAME]
+                           [--proxy-password PROXY_PASSWORD] [--redownload]
                            [-s {no,win}] [--setter-args SETTER_ARGS]
-                           [-t OUTPUT_FOLDER]
+                           [-t OUTPUT_FOLDER] [--database-file DATABASE_FILE]
+                           [--database-no-image] [--server {global,china,custom}]
+                           [--custom-server CUSTOMSERVER]
     
     Download the wallpaper offered by Bing.com and set it current wallpaper
     background.
@@ -79,8 +80,8 @@ Donate with PayPal EUR
       -h, --help            show this help message and exit
       -v, --version         show version information
       --config-file CONFIG_FILE
-                            specify configuration file, use 'settings.conf'
-                            in installation directory by default.
+                            'specify configuration file, use 'settings.conf' in
+                            installation directory by default.
       --generate-config     generate a configuration file containing arguments
                             specified in command line and exit. to generate
                             default config file, issue without other command
@@ -116,30 +117,25 @@ Donate with PayPal EUR
       -k, --keep-file-name  keep the original filename. By default downloaded file
                             will be renamed as 'wallpaper.jpg'. Keep file name
                             will retain all downloaded photos
-      -m {prefer,collect,highest,insist,manual,never}, 
-      --size-mode {prefer,collect,highest,insist,manual,never}
-                            set selecting strategy when wallpapers in 
-                            different size are available (normally 1920x1200
-                            and 1366x768).
+      -m {prefer,collect,highest,insist,manual,never}, --size-mode {prefer,collect,highest,insist,manual,never}
+                            set selecting strategy when wallpapers in different
+                            size are available (normally 1920x1200 and 1366x768).
                             `prefer` (default) uses high resolution if it's
                             available, otherwise downloads normal resolution;
-                            `insist` always use high resolution and ignore 
-                            other pictures (Note: some countries have only
-                            normal size wallpapers, if `insist` is adopted
-                            with those sites, no wallpaper can be 
-                            downloaded, see `--country` for more); 
-                            `highest` use the highest available resolution,
-                            that is, 1920x1200 for HD sites, 1920x1080 for 
-                            others;
-                            `never` always use normal resolution; 
-                            `manual` use resolution specified in `--image-size`
-                            resolution specified in `--image-size` `collect` 
-                            acts exactly as highest in most of cases, however
-                            it will also download the picture with Chinese 
-                            bing logo if the picture is ROW and in the size
-                            of 1920x1200 (try --market=en-ww). In collect
-                            mode, only the first picture (usually the one
-                            with English bing logo) will be set as wallpaper.
+                            `insist` always use high resolution and ignore other
+                            pictures (Note: some countries have only normal size
+                            wallpapers, if `insist` is adopted with those sites,
+                            no wallpaper can be downloaded, see `--country` for
+                            more); `highest` use the highest available resolution,
+                            that is, 1920x1200 for HD sites, 1920x1080 for others;
+                            `never` always use normal resolution; `manual` use
+                            resolution specified in `--image-size` `collect` acts
+                            exactly as highest in most of cases, however it will
+                            also download the picture with Chinese bing logo if
+                            the picture is ROW and in the size of 1920x1200 (try
+                            --market=en-ww). In collect mode, only the first
+                            picture (usually the one with English bing logo) will
+                            be set as wallpaper.
       --image-size IMAGE_SIZE
                             specify resolution of image to download. check
                             `--size-mode` for more
@@ -155,8 +151,8 @@ Donate with PayPal EUR
       --proxy-password PROXY_PASSWORD
                             optional password for proxy server authentication
       --redownload          do not check history records. Download must be done.
-                            downloaded picture will still be recorded in 
-                            history file.
+                            downloaded picture will still be recorded in history
+                            file.
       -s {no,win,gnome2,gnome3}, --setter {no,win,gnome2,gnome3}
                             specify interface to be called for setting wallpaper.
                             'no' indicates downloading-only; 'gnome2/3' are only
@@ -170,10 +166,33 @@ Donate with PayPal EUR
                             and Settings/<your-username>/MyBingWallpapers in
                             Windows XP or 'C:/Users/<your-
                             username>/MyBingWallpapers' in Windows 7 by default
+      --database-file DATABASE_FILE
+                            specify the sqlite3 database used to store meta info
+                            of photos. leave it blank to disable database storage.
+      --database-no-image   images will be embedded into database by default.
+                            Exclude images from database can reduce the size of
+                            database file.
+      --server {global,china,custom}
+                            select bing server used for meta data and wallpaper
+                            pictures. it seems bing.com uses different servers and
+                            domain names in china. global: use bing.com of course.
+                            china: use s.cn.bing.net. (note: use this may freeze
+                            market or country to China zh-CN) custom: use the
+                            server specified in option "customserver"
+      --custom-server CUSTOMSERVER
+                            specify server used for meta data and wallpaper photo.
+                            you need to set --server to 'custom' to enable the
+                            custom server address.
     
 ----------
 
 ### Release Note
+* **2014-09-08 1.4.4**
+    * Support configurable bing server address (#27)
+
+* **2014-04-18 1.4.4b01**
+    * Support download records database (#18), you can build you own bing album now. 
+
 * **2013-12-24 1.4.3**
     * Fix #13 enhance robustness of network connection status: retry in
       60 seconds after network failure 
