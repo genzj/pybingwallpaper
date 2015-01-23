@@ -11,7 +11,7 @@ buildOptions = {'packages': ['urllib', 'PIL'],
                  'excludes': ['tkinter'],
                  'compressed':1,
                  'include_files': [('src/winsetter.py','')],
-                 'bin_includes': ['pywintypes33.dll'],
+                 'bin_includes': ['pywintypes34.dll'],
                  'optimize': 2,
                }
 
