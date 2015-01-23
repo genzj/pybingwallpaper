@@ -218,8 +218,8 @@ SectionEnd
   LangString DESC_SecRunit ${LANG_ENGLISH} "Run ${PROGRAM_NAME} and change wallpaper immediately after installation"
   LangString DESC_SecGrCountry ${LANG_ENGLISH} "Bing.com wallpaper may vary from countries. Those countries marked (HD) support high resolution wallpapers(1920x1200)"
 
-  LangString ASK_FOR_CONFIG_DEL1 ${LANG_ENGLISH} "Do you want to remove configuration files in installation path?" 
-  LangString ASK_FOR_CONFIG_DEL2 ${LANG_ENGLISH} "Removed configurations can't be restored, are you sure you want to remove them?" 
+  LangString ASK_FOR_CONFIG_DEL1 ${LANG_ENGLISH} "Do you want to remove all files in installation path?" 
+  LangString ASK_FOR_CONFIG_DEL2 ${LANG_ENGLISH} "Removed files (including configuration, wallpapers if you put them under installation path) can't be restored, are you sure you want to remove them?" 
   
 
 
@@ -237,8 +237,8 @@ SectionEnd
   LangString DESC_SecRunit ${LANG_SimpChinese} "安装完成后启动${PROGRAM_NAME}（需要访问网络）"
   LangString DESC_SecGrCountry ${LANG_SimpChinese} "不同国家访问Bing.com时桌面可能会不同。标有HD的分站支持高分辨率桌面(1920x1200)"
 
-  LangString ASK_FOR_CONFIG_DEL1 ${LANG_SimpChinese} "是否删除安装目录下的所有配置文件？" 
-  LangString ASK_FOR_CONFIG_DEL2 ${LANG_SimpChinese} "配置文件删除后不可恢复！确认删除？" 
+  LangString ASK_FOR_CONFIG_DEL1 ${LANG_SimpChinese} "是否删除安装目录下的所有文件？" 
+  LangString ASK_FOR_CONFIG_DEL2 ${LANG_SimpChinese} "安装目录下的所有文件（包括配置文件和其他用户创建文件）删除后不可恢复！确认删除？" 
 
   ;Assign descriptions to sections
   !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
@@ -324,7 +324,7 @@ delall:
   RMDir /r "$INSTDIR"
   Quit
 keepconfig:
-  DetailPrint "keep user configurations in $INSTDIR"
+  DetailPrint "keep user files in $INSTDIR"
 SectionEnd
 
 ;--------------------------------
