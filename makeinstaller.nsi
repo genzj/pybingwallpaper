@@ -16,6 +16,12 @@
 
 !include "Sections.nsh"
 
+; For code readability
+!include "LogicLib.nsh"
+
+; For win7 install path
+!include "WinVer.nsh"
+
 ;--------------------------------
 
 !define PROGRAM_NAME PyBingWallpaper
@@ -26,7 +32,6 @@ Name ${PROGRAM_NAME}
 ; The file to write
 OutFile "pybingwp-1-4-4.exe"
 
-; The default installation directory
 InstallDir $PROGRAMFILES\Genzj\${PROGRAM_NAME}
 
 ; Registry key to check for directory (so if you install again, it will 
@@ -55,6 +60,7 @@ LicenseData $(license)
 ;Variables
 Var COUNTRY_CODE
 Var COUNTRY_CHOSEN
+Var STARTUP_MODE
 
 ;--------------------------------
 ;Pages
@@ -170,7 +176,23 @@ SectionEnd
 
 ; Create auto startup
 Section $(NAME_SecStartup) SecStartup
-  CreateShortCut "$SMSTARTUP\${PROGRAM_NAME}.lnk" "$INSTDIR\BingWallpaper.exe" "-b" "$INSTDIR\bingwallpaper.ico" 0
+  StrCpy $STARTUP_MODE "background"
+SectionEnd
+
+; Create auto startup
+Section /o $(NAME_SecStartupOnce) SecStartupOnce
+  StrCpy $STARTUP_MODE "foreground"
+SectionEnd
+
+Section -InstallStartup
+  ${If} $STARTUP_MODE == 'background'
+    CreateShortCut "$SMSTARTUP\${PROGRAM_NAME}.lnk" "$INSTDIR\BingWallpaper.exe" "-b" "$INSTDIR\bingwallpaper.ico" 0
+  ${ElseIf} $STARTUP_MODE == 'foreground'
+    CreateShortCut "$SMSTARTUP\${PROGRAM_NAME}.lnk" "$INSTDIR\BingWallpaper.exe" "--foreground" "$INSTDIR\bingwallpaper.ico" 0
+  ${Else}
+    ; no startup
+  ${EndIf}
+
 SectionEnd
 
 ; Run it immediately
@@ -184,13 +206,15 @@ SectionEnd
   ;USE A LANGUAGE STRING IF YOU WANT YOUR DESCRIPTIONS TO BE LANGAUGE SPECIFIC
   LangString NAME_SecMain ${LANG_ENGLISH} "!PyBingWallpaper Main Programs" 
   LangString NAME_SecStartMenu ${LANG_ENGLISH} "Start Menu Shortcuts" 
-  LangString NAME_SecStartup ${LANG_ENGLISH} "Run at Windows Startup" 
+  LangString NAME_SecStartup ${LANG_ENGLISH} "Run at Windows Startup"
+  LangString NAME_SecStartupOnce ${LANG_ENGLISH} "Don't run in background after auto start." 
   LangString NAME_SecRunit ${LANG_ENGLISH} "Change Wallpaper After Installation" 
   LangString NAME_SecGrCountry ${LANG_ENGLISH} "Country Setting" 
 
   LangString DESC_SecMain ${LANG_ENGLISH} "Main program files of ${PROGRAM_NAME}."
   LangString DESC_SecStartMenu ${LANG_ENGLISH} "Create Start Menu shortcuts for ${PROGRAM_NAME}"
   LangString DESC_SecStartup ${LANG_ENGLISH} "Auto run ${PROGRAM_NAME} at Windows startup (network connection at startup is required)"
+  LangString DESC_SecStartupOnce ${LANG_ENGLISH} "Exit after downloading during startup (disables auto updating). Relies Auto Run."
   LangString DESC_SecRunit ${LANG_ENGLISH} "Run ${PROGRAM_NAME} and change wallpaper immediately after installation"
   LangString DESC_SecGrCountry ${LANG_ENGLISH} "Bing.com wallpaper may vary from countries. Those countries marked (HD) support high resolution wallpapers(1920x1200)"
 
@@ -201,13 +225,15 @@ SectionEnd
 
   LangString NAME_SecMain ${LANG_SimpChinese} "PyBingWallpaper主程序" 
   LangString NAME_SecStartMenu ${LANG_SimpChinese} "创建开始菜单快捷方式" 
-  LangString NAME_SecStartup ${LANG_SimpChinese} "系统启动时运行" 
+  LangString NAME_SecStartup ${LANG_SimpChinese} "系统启动时运行"
+  LangString NAME_SecStartupOnce ${LANG_SimpChinese} "自动运行不驻留内存"  
   LangString NAME_SecRunit ${LANG_SimpChinese} "立即更换桌面" 
   LangString NAME_SecGrCountry ${LANG_SimpChinese} "国家设置" 
 
   LangString DESC_SecMain ${LANG_SimpChinese} "${PROGRAM_NAME}主程序文件"
   LangString DESC_SecStartMenu ${LANG_SimpChinese} "在开始菜单创建${PROGRAM_NAME}快捷方式"
   LangString DESC_SecStartup ${LANG_SimpChinese} "启动Windows时自动运行${PROGRAM_NAME}（启动时需要访问网络）"
+  LangString DESC_SecStartupOnce ${LANG_SimpChinese} "自动运行后退出程序，不驻留内存（依赖自动启动，选中此项将关闭定时更换功能）"
   LangString DESC_SecRunit ${LANG_SimpChinese} "安装完成后启动${PROGRAM_NAME}（需要访问网络）"
   LangString DESC_SecGrCountry ${LANG_SimpChinese} "不同国家访问Bing.com时桌面可能会不同。标有HD的分站支持高分辨率桌面(1920x1200)"
 
@@ -219,6 +245,7 @@ SectionEnd
     !insertmacro MUI_DESCRIPTION_TEXT ${SecMain} $(DESC_SecMain)
     !insertmacro MUI_DESCRIPTION_TEXT ${SecStartMenu} $(DESC_SecStartMenu)
     !insertmacro MUI_DESCRIPTION_TEXT ${SecStartup} $(DESC_SecStartup)
+	!insertmacro MUI_DESCRIPTION_TEXT ${SecStartupOnce} $(DESC_SecStartupOnce)
     !insertmacro MUI_DESCRIPTION_TEXT ${SecRunit} $(DESC_SecRunit)
     !insertmacro MUI_DESCRIPTION_TEXT ${SecGrCountry} $(DESC_SecGrCountry)
   !insertmacro MUI_FUNCTION_DESCRIPTION_END
@@ -325,6 +352,8 @@ FunctionEnd
 Function .onInit
   StrCpy $COUNTRY_CODE "us"
   StrCpy $COUNTRY_CHOSEN ${country_us}
+  StrCpy $STARTUP_MODE ""
+   
   Call upgrade
   !insertmacro MUI_LANGDLL_DISPLAY
 FunctionEnd
