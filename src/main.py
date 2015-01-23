@@ -12,7 +12,7 @@ import sched
 import config
 
 NAME = 'pybingwallpaper'
-REV  = '1.4.4'
+REV  = '1.5.0'
 LINK = 'https://github.com/genzj/pybingwallpaper'
 HISTORY_FILE = pathjoin(expanduser('~'), 'bing-wallpaper-history.json')
 
