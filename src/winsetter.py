@@ -4,7 +4,7 @@ import sys
 import subprocess
 from importlib import import_module
 from setter import *
-from os.path import splitext
+from os.path import dirname, splitext
 
 if sys.platform == 'win32':
     winreg = import_module('winreg')
@@ -51,7 +51,7 @@ if sys.platform == 'win32':
         def set(self, path, args):
             k = None
             inpath = path.replace('/', '\\')
-            path   = "{}.bmp".format(splitext(inpath)[0])
+            path   = "{}\\wallpaper.bmp".format(dirname(inpath))
             # windows only supports BMP, convert before setting
             try:
                 convert_photo_to_bmp(inpath, path)
@@ -64,7 +64,6 @@ if sys.platform == 'win32':
                 lastvalue = self._read_value(k)
                 if lastvalue and self.BACKUP:
                     ret = self._set_value(k, lastvalue[0], self.VALUE_NAME+'Backup')
-                #ret = self._set_value(k, path)
                 self._set_value(k, '0', 'TileWallpaper')
                 self._set_value(k, '10', 'WallpaperStyle')
                 win32gui.SystemParametersInfo(SPI_SETDESKWALLPAPER, path, 1+2)
