@@ -68,31 +68,83 @@ class ManualHighResolution(HighResolutionSetting):
         _logger.debug('manually specify resolution, use %s', wplink)
         return (wplink,)
 
-class CollectResolutions(HighestResolution):
-    def getPicUrl(self, rooturl, imgurlbase, fallbackurl, has_wp, *args, **kwargs):
-        wplink = HighestResolution.getPicUrl(
-                    self, rooturl, imgurlbase, fallbackurl, has_wp, *args, **kwargs
-                 )[0]
-        if '_ROW' in wplink and '_1920x1200' in wplink and '_ZH_' not in wplink:
-            _logger.debug('%s may have a Chinese brother', wplink)
-            zhlink = wplink.replace('_1920x1200', '_ZH_1920x1200')
-            return (wplink, zhlink)
-        else:
-            _logger.debug('no chinese logo for %s', wplink)
-            return (wplink,)
-
 HighResolutionSetting.settings['prefer'] = PreferHighResolution
 HighResolutionSetting.settings['insist'] = InsistHighResolution
 HighResolutionSetting.settings['never'] = NeverHighResolution
 HighResolutionSetting.settings['highest'] = HighestResolution
 HighResolutionSetting.settings['manual'] = ManualHighResolution
-HighResolutionSetting.settings['collect'] = CollectResolutions
+
+class AssetCollector:
+    __registered_collectors = dict()
+    @classmethod
+    def register(cls, name, collector):
+        if name in cls.__registered_collectors:
+            raise Exception(
+                'collector {!s} has been registered by {!r}'.format(
+                    name, cls.__registered_collectors[name]
+                )
+            )
+        cls.__registered_collectors[name] = collector
+
+    @classmethod
+    def get(cls, name, *initargs, **initkwargs):
+        if name not in cls.__registered_collectors:
+            _logger.warning('collector %s is not supported', name)
+            # return a blank collect
+            return AssetCollector()
+        return cls.__registered_collectors[name](*initargs, **initkwargs)
+
+    def collect(self, rooturl, curimage):
+        return None
+
+class AccompanyImageCollector(AssetCollector):
+    def collect(self, rooturl, curimage):
+        imgurlbase = curimage['urlbase']
+        has_wp = curimage.get('wp', False)
+        if has_wp and '_ROW' in imgurlbase and '_ZH_' not in imgurlbase:
+            _logger.debug('%s may have a Chinese brother', imgurlbase)
+            zhlink = [webutil.urljoin(rooturl, '_'.join([imgurlbase,'ZH_1920x1200.jpg'])), ]
+        else:
+            _logger.debug('no chinese logo for %s', imgurlbase)
+            zhlink = None
+        return zhlink
+
+class VideoCollector(AssetCollector):
+    def collect(self, rooturl, curimage):
+        vlink = list()
+        if 'vid' not in curimage:
+            return None
+        for format, _, vurl in curimage['vid']['sources']:
+            if format.endswith('hd'):
+                continue
+            elif vurl.startswith('//'):
+                vurl = 'http:' + vurl
+            vlink.append(vurl)
+        return vlink
+
+class HdVideoCollector(AssetCollector):
+    def collect(self, rooturl, curimage):
+        vlink = list()
+        if 'vid' not in curimage:
+            return None
+        for format, _, vurl in curimage['vid']['sources']:
+            if not format.endswith('hd'):
+                continue
+            elif vurl.startswith('//'):
+                vurl = 'http:' + vurl
+            vlink.append(vurl)
+        return vlink
+
+AssetCollector.register('accompany', AccompanyImageCollector)
+AssetCollector.register('video', VideoCollector)
+AssetCollector.register('hdvideo', HdVideoCollector)
 
 class BingWallpaperPage:
     BASE_URL='http://www.bing.com'
-    IMAGE_API='/HPImageArchive.aspx?format=js&mbl=1&idx={idx}&n={n}'
+    IMAGE_API='/HPImageArchive.aspx?format=js&mbl=1&idx={idx}&n={n}&video=1'
     def __init__(self, idx, n=1, base=BASE_URL, api=IMAGE_API, country_code=None, 
-                market_code=None, high_resolution = PreferHighResolution, resolution='1920x1200'):
+                market_code=None, high_resolution = PreferHighResolution, resolution='1920x1200',
+                collect=[]):
         self.idx = idx
         self.n = n
         self.base = base
@@ -103,6 +155,7 @@ class BingWallpaperPage:
         self.market_code = market_code
         self.high_resolution = high_resolution
         self.resolution = resolution
+        self.collect = collect
         if market_code:
             BingWallpaperPage.validate_market(market_code)
             self.url = '&'.join([self.url, 'mkt={}'.format(market_code)])
@@ -134,6 +187,8 @@ class BingWallpaperPage:
             self.act_market = self.content['market']['mkt']
         self._update_img_link()
 
+        _logger.warning('links to be downloaded: %s', self.wplinks)
+
         return True
 
     def _get_metadata(self, i):
@@ -155,7 +210,11 @@ class BingWallpaperPage:
             _logger.debug('handling %s, rooturl=%s, imgurlbase=%s, has_wp=%s, resolution=%s, act_market=%s', 
                         i['url'], self.base, i['urlbase'], has_wp, self.resolution, self.act_market)
             wplink = self.high_resolution().getPicUrl(self.base, i['urlbase'], i['url'], has_wp, self.resolution)
-            if wplink: self.wplinks.append((wplink, metadata))
+            collections = list()
+            for collector_name in self.collect:
+                asset = AssetCollector.get(collector_name).collect(self.base, i)
+                if asset: collections += asset
+            if wplink: self.wplinks.append((wplink + tuple(collections), metadata))
 
     def load(self):
         self.reset()

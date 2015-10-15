@@ -179,18 +179,37 @@ def prepare_config_db():
                     is, 1920x1200 for HD sites, 1920x1080 for others;
                     `never` always use normal resolution;
                     `manual` use resolution specified in `--image-size`
-                    `collect` acts exactly as highest in most of cases,
-                    however it will also download the picture with Chinese
-                    bing logo if the picture is ROW and in the size of 1920x1200
-                    (try --market=en-ww). In collect mode, only the first
-                    picture (usually the one with English bing logo)
-                    will be set as wallpaper.''',
+                    `collect` is obsolete and only kept for backward
+                    compatibility, equals highest mode together with
+                    --collect=accompany option.''',
             loader_opts={'cli':{
                 'flags':('-m', '--size-mode'),
                 }, 'conffile':{
                 'section':'Download',
                 }}
             ))
+
+    params.append(config.ConfigParameter('collect', defaults=[],
+            help='''items to be collected besides main wallpaper, can be assigned
+            more than once in CLI or as comma separated list from config file.
+            currently `accompany`, `video` and `hdvideo` are supported.
+            `accompany` - some markets (i.e. en-ww) offers two wallpapers
+            every day with same image but different Bing logo (English and
+            Chinese respectively). enables this will download both original
+            wallpaper and its accompanyings.
+            `video` - bing sometimes (not everyday) release interesting
+            animated mp4 background, use this to collect them.
+            `hdvideo` - HD version of video.''',
+            loader_opts={'cli':{
+                'flags':('--collect',),
+                'action':'append',
+                }, 'conffile':{
+                'formatter':lambda args: ','.join(args),
+                'converter':lambda arg: [p.strip() for p in arg.split(',') if p.strip()],
+                'section':'Download',
+                }}
+            ))
+
     params.append(config.ConfigParameter('image_size', defaults='',
             help='''specify resolution of image to download. check
                     `--size-mode` for more''',
@@ -382,9 +401,10 @@ def download_wallpaper(run_config):
                 market_code = market_code,
                 high_resolution = bingwallpaper.HighResolutionSetting.getByName(
                     run_config.size_mode
-                    ),
-                resolution = run_config.image_size
-                )
+                ),
+                resolution = run_config.image_size,
+                collect = set(run_config.collect)
+            )
         _logger.debug(repr(s))
         s.load()
         _logger.log(log.PAGEDUMP, str(s))
@@ -417,21 +437,21 @@ def download_wallpaper(run_config):
                                     raw=None if run_config.database_no_image else raw,
                                     market=metadata['market'])
         records.append(r)
-        collect_accompanying_pictures(wplinks[1:], metadata, run_config.output_folder, records)
+        collect_assets(wplinks[1:], metadata, run_config.output_folder, records)
         return records
 
     _logger.info('bad luck, no wallpaper today:(')
     return None
 
-def collect_accompanying_pictures(wplinks, metadata, output_folder, records):
+def collect_assets(wplinks, metadata, output_folder, records):
     copyright = metadata['copyright']
     market = metadata['market']
     for link in wplinks:
-        filename = pathjoin(output_folder, basename(link))
-        _logger.info('download accompanying photo of "%s" from %s to %s',
+        _logger.info('download assets of "%s" from %s to %s',
                         copyright, link, output_folder)
+        filename = pathjoin(output_folder, basename(link))
         raw = save_a_picture(link, copyright, filename)
-        if raw:
+        if raw and filename.endswith('jpg'):
             r = record.DownloadRecord(link, filename, copyright,
                                         raw=None if run_config.database_no_image else raw,
                                         is_accompany=True, market=market)
@@ -592,6 +612,16 @@ def load_config(configdb, args = None):
         run_config.setter_args = ','.join(run_config.setter_args).split(',')
     else:
         run_config.setter_args = list()
+
+    # backward compatibility modifications
+    if run_config.size_mode == 'collect':
+        _logger.warning(
+            'size_mode=collect is obsolete, considering use collect=accompany instead'
+        )
+        run_config.size_mode = 'highest'
+        if 'accompany' not in run_config.collect:
+            run_config.collect.append('accompany')
+
     _logger.info('running config is:\n\t%s', config.pretty(run_config, '\n\t'))
     return run_config
 
