@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 import log
 import sys
-import subprocess
 from importlib import import_module
-from setter import *
+import setter
 from os.path import dirname, splitext
 
 if sys.platform == 'win32':
@@ -18,7 +17,7 @@ if sys.platform == 'win32':
 
     SPI_SETDESKWALLPAPER = 0x0014
 
-    class Win32WallpaperSetter(WallpaperSetter):
+    class Win32WallpaperSetter(setter.WallpaperSetter):
         KEY = winreg.HKEY_CURRENT_USER
         SUB_KEY = 'Control Panel\\Desktop'
         VALUE_NAME = 'Wallpaper'
@@ -74,7 +73,7 @@ if sys.platform == 'win32':
                 if k: k.Close()
             return ret
 
-    register('win', Win32WallpaperSetter)
+    setter.register('win', Win32WallpaperSetter)
 
     if __name__ == '__main__':
         log.setDebugLevel(log.DEBUG)
