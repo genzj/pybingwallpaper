@@ -447,18 +447,22 @@ def collect_assets(wplinks, metadata, output_folder, records):
     copyright = metadata['copyright']
     market = metadata['market']
     for link in wplinks:
-        _logger.info('download assets of "%s" from %s to %s',
+        _logger.debug('downloading assets of "%s" from %s to %s',
                         copyright, link, output_folder)
         filename = pathjoin(output_folder, basename(link))
-        raw = save_a_picture(link, copyright, filename)
-        if raw and filename.endswith('jpg'):
+        raw = save_a_picture(link, copyright, filename, optional=True)
+        if not raw:
+            continue
+        elif filename.endswith('jpg'):
             r = record.DownloadRecord(link, filename, copyright,
                                         raw=None if run_config.database_no_image else raw,
                                         is_accompany=True, market=market)
             records.append(r)
+        _logger.info('assets "%s" of "%s" has been downloaded to %s',
+                        link, copyright, output_folder)
 
-def save_a_picture(pic_url, info, outfile):
-    picture_content = webutil.loadurl(pic_url)
+def save_a_picture(pic_url, info, outfile, optional=False):
+    picture_content = webutil.loadurl(pic_url, optional=optional)
     if picture_content:
         with open(outfile, 'wb') as of:
             of.write(picture_content)

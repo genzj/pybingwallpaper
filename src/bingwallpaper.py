@@ -101,7 +101,7 @@ class AccompanyImageCollector(AssetCollector):
     def collect(self, rooturl, curimage):
         imgurlbase = curimage['urlbase']
         has_wp = curimage.get('wp', False)
-        if has_wp and '_ROW' in imgurlbase and '_ZH_' not in imgurlbase:
+        if has_wp and '_ZH_' not in imgurlbase:
             _logger.debug('%s may have a Chinese brother', imgurlbase)
             zhlink = [webutil.urljoin(rooturl, '_'.join([imgurlbase,'ZH_1920x1200.jpg'])), ]
         else:

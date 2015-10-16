@@ -56,7 +56,7 @@ def _ungzip(html):
         html = gzip.GzipFile(fileobj = BytesIO(html)).read()
     return html
 
-def loadurl(url, headers={}):
+def loadurl(url, headers={}, optional=False):
     if not url: return None
     _logger.debug('getting url %s, headers %s', url, headers)
     if 'User-Agent' not in headers:
@@ -65,7 +65,8 @@ def loadurl(url, headers={}):
         req = Request(url=url, headers=headers)
         con = urlopen2(req)
     except Exception as err:
-        _logger.error('error %s occurs during load %s with header %s', err, url, headers)
+        if not optional:
+            _logger.error('error %s occurs during load %s with header %s', err, url, headers)
         _logger.debug('', exc_info=1)
         return None
     if con:
@@ -78,8 +79,8 @@ def loadurl(url, headers={}):
         _logger.error("No data returned.")
     return None
 
-def loadpage(url, decodec=('utf8', 'strict'), headers={}):
-    data = loadurl(url)
+def loadpage(url, decodec=('utf8', 'strict'), headers={}, optional=False):
+    data = loadurl(url, headers=headers, optional=optional)
     return data.decode(*decodec) if data else None
 
 def postto(url, datadict, headers={}, decodec='gbk'):
