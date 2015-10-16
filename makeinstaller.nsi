@@ -354,6 +354,13 @@ Function .onInit
   StrCpy $COUNTRY_CHOSEN ${country_us}
   StrCpy $STARTUP_MODE ""
    
+  ; issue #31: for win7 and above, program files folder is access-limited so
+  ; that editing configuration file becomes inconvenient. install to appdata
+  ; instead
+  ${If} ${AtLeastWin7}
+    StrCpy $INSTDIR "$APPDATA\Genzj\PyBingWallpaper"
+  ${EndIf}
+
   Call upgrade
   !insertmacro MUI_LANGDLL_DISPLAY
 FunctionEnd

@@ -14,7 +14,16 @@ import config
 NAME = 'pybingwallpaper'
 REV  = '1.5.0'
 LINK = 'https://github.com/genzj/pybingwallpaper'
-HISTORY_FILE = pathjoin(expanduser('~'), 'bing-wallpaper-history.json')
+
+if platform == 'win32':
+    HISTORY_FILE = pathjoin(
+        os.getenv('APPDATA', expanduser('~')),
+        'Genzj',
+        'PyBingWallpaper',
+        'bing-wallpaper-history.json'
+    )
+else:
+    HISTORY_FILE = pathjoin(expanduser('~'), '.bing-wallpaper-history.json')
 
 _logger = log.getChild('main')
 
@@ -532,6 +541,7 @@ def main(daemon=None):
     setter.load_ext_setters(dirname(abspath(argv[0])))
 
     prepare_output_dir(run_config.output_folder)
+    prepare_output_dir(dirname(HISTORY_FILE))
 
     load_history()
     install_proxy(run_config)
