@@ -389,11 +389,20 @@ def prepare_config_db():
     return configdb
 
 def prepare_output_dir(d):
-    os.makedirs(d, exist_ok=True)
+    try:
+        os.makedirs(d, exist_ok=True)
+    except FileExistsError:
+        # even exist_os is true, this exception can also be raised
+        # https://bugs.python.org/issue13498
+        pass
     if isdir(d):
         return True
     else:
         _logger.critical('can not create output folder %s', d)
+    if os.access(d, os.W_OK|os.R_OK):
+        return True
+    else:
+        _logger.critical('can not access output folder %s', d)
 
 def download_wallpaper(run_config):
     records = list()
