@@ -108,7 +108,7 @@ Section $(NAME_SecMain) SecMain
 
   ; Put file there
   !cd ./build/exe.win32-3.4
-  File /x *.pyc /x __pycache__ "*"
+  File /x *.pyc /x __pycache__ /x tk*.dll /x tcl*.dll "*"
   !cd ../..
   File "res\bingwallpaper.ico"
   
