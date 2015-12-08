@@ -23,10 +23,10 @@ Download installer from any of following links and install it.
 * [from dropbox](https://www.dropbox.com/s/j5d8rn1wzqi6jxl/pybingwp-1-5-0.exe?dl=1) 
 * [Baidu Disk(百度盘)](http://pan.baidu.com/s/1QhcOu) 
 
->>    CRC32: C11AFACA
->>    MD5: 8A2BB97DB9F20E82F21DC8E7110B8446
->>    SHA-1: 5A44DE70297851626DCF7404D234B37AE07402D7
->>    SHA-256: D9C2AC43EFE393E8F6D8AE3ED6A967085325C481C9FFAC5FAF2F3969B18E0BB5
+>> CRC32: C11AFACA
+>> MD5: 8A2BB97DB9F20E82F21DC8E7110B8446
+>> SHA-1: 5A44DE70297851626DCF7404D234B37AE07402D7
+>> SHA-256: D9C2AC43EFE393E8F6D8AE3ED6A967085325C481C9FFAC5FAF2F3969B18E0BB5
 
 A shortcut will be created in your startup folder. You can edit the configuration to adjust features.
 
