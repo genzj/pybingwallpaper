@@ -19,9 +19,14 @@ Download installer from any of following links and install it.
 <p>**Note: Please backup the `settings.conf` under the installation path before upgrading!**</p>
 <p>**注意：建议升级前备份安装目录下的`settings.conf`文件！**</p>
 
-**Latest Release 1.4.4**
-* [from dropbox](https://www.dropbox.com/s/s0d4mj4ig07x5nb/pybingwp-1-4-4.exe) 
-* [Baidu Disk(百度盘)](http://pan.baidu.com/s/1gdsxbPp) 
+**Latest Release 1.5.0**
+* [from dropbox](https://www.dropbox.com/s/j5d8rn1wzqi6jxl/pybingwp-1-5-0.exe?dl=1) 
+* [Baidu Disk(百度盘)](http://pan.baidu.com/s/1QhcOu) 
+
+>>    CRC32: C11AFACA
+>>    MD5: 8A2BB97DB9F20E82F21DC8E7110B8446
+>>    SHA-1: 5A44DE70297851626DCF7404D234B37AE07402D7
+>>    SHA-256: D9C2AC43EFE393E8F6D8AE3ED6A967085325C481C9FFAC5FAF2F3969B18E0BB5
 
 A shortcut will be created in your startup folder. You can edit the configuration to adjust features.
 
@@ -42,7 +47,8 @@ You can also append arguments in *Command* box.
 
 ### Donation
 
-If you like this tool, consider buying a cup of coffee for nocturnal coders. **This tool is totally free.  Donation will NOT add any additonal features.**
+If you like this tool, consider buying a cup of coffee for nocturnal coders.
+**This tool is totally free.  Donation will NOT add any additonal features.**
 
 Donate with PayPal USD
 
@@ -64,23 +70,24 @@ Donate with PayPal EUR
                            [-c {au,br,ca,cn,de,fr,jp,nz,us,uk,auto}]
                            [--market MARKET] [-d] [-i INTERVAL] [-k]
                            [-m {prefer,collect,highest,insist,manual,never}]
-                           [--image-size IMAGE_SIZE] [-o OFFSET]
-                           [--proxy-server PROXY_SERVER] [--proxy-port PROXY_PORT]
+                           [--collect COLLECT] [--image-size IMAGE_SIZE]
+                           [-o OFFSET] [--proxy-server PROXY_SERVER]
+                           [--proxy-port PROXY_PORT]
                            [--proxy-username PROXY_USERNAME]
                            [--proxy-password PROXY_PASSWORD] [--redownload]
-                           [-s {no,win}] [--setter-args SETTER_ARGS]
+                           [-s {no,win,gnome2,gnome3}] [--setter-args SETTER_ARGS]
                            [-t OUTPUT_FOLDER] [--database-file DATABASE_FILE]
                            [--database-no-image] [--server {global,china,custom}]
                            [--custom-server CUSTOMSERVER]
-    
+
     Download the wallpaper offered by Bing.com and set it current wallpaper
     background.
-    
+
     optional arguments:
       -h, --help            show this help message and exit
       -v, --version         show version information
       --config-file CONFIG_FILE
-                            'specify configuration file, use 'settings.conf' in
+                            'specify configuration file, use `settings.conf` in
                             installation directory by default.
       --generate-config     generate a configuration file containing arguments
                             specified in command line and exit. to generate
@@ -91,13 +98,14 @@ Donate with PayPal EUR
                             periodically (interval can be set by --interval).
       --foreground          force working in foreground mode to cancel the effect
                             of `background` in config file.
-      -c {au,br,ca,cn,de,fr,jp,nz,us,uk,auto}, --country {au,br,ca,cn,de,fr,jp,nz,us,uk,auto}
+      -c {au,br,ca,cn,de,fr,jp,nz,us,uk,auto}, --country {au,br,ca,cn,de,fr,jp,nz,us
+    ,uk,auto}
                             select country code sent to bing.com. bing.com in
                             different countries may show different backgrounds.
                             au: Australia br: Brazil ca: Canada cn: China
-                            de:Germany fr: France jp: Japan nz: New Zealand us: USA
-                            uk: United Kingdom auto: select country according to
-                            your IP address (by Bing.com) Note: only China(cn),
+                            de:Germany fr: France jp: Japan nz: New Zealand us:
+                            USA uk: United Kingdom auto: select country according
+                            to your IP address (by Bing.com) Note: only China(cn),
                             New Zealand(nz) and USA(us) have high resolution
                             (1920x1200) wallpapers; the rest offer 1366x768 only.
       --market MARKET       specify market from which the wallpaper should be
@@ -117,7 +125,8 @@ Donate with PayPal EUR
       -k, --keep-file-name  keep the original filename. By default downloaded file
                             will be renamed as 'wallpaper.jpg'. Keep file name
                             will retain all downloaded photos
-      -m {prefer,collect,highest,insist,manual,never}, --size-mode {prefer,collect,highest,insist,manual,never}
+      -m {prefer,collect,highest,insist,manual,never}, --size-mode {prefer,collect,h
+    ighest,insist,manual,never}
                             set selecting strategy when wallpapers in different
                             size are available (normally 1920x1200 and 1366x768).
                             `prefer` (default) uses high resolution if it's
@@ -129,13 +138,21 @@ Donate with PayPal EUR
                             more); `highest` use the highest available resolution,
                             that is, 1920x1200 for HD sites, 1920x1080 for others;
                             `never` always use normal resolution; `manual` use
-                            resolution specified in `--image-size` `collect` acts
-                            exactly as highest in most of cases, however it will
-                            also download the picture with Chinese bing logo if
-                            the picture is ROW and in the size of 1920x1200 (try
-                            --market=en-ww). In collect mode, only the first
-                            picture (usually the one with English bing logo) will
-                            be set as wallpaper.
+                            resolution specified in `--image-size` `collect` is
+                            obsolete and only kept for backward compatibility,
+                            equals highest mode together with --collect=accompany
+                            option.
+      --collect COLLECT     items to be collected besides main wallpaper, can be
+                            assigned more than once in CLI or as comma separated
+                            list from config file. currently `accompany`, `video`
+                            and `hdvideo` are supported. `accompany` - some
+                            markets (i.e. en-ww) offers two wallpapers every day
+                            with same image but different Bing logo (English and
+                            Chinese respectively). enables this will download both
+                            original wallpaper and its accompanyings. `video` -
+                            bing sometimes (not everyday) release interesting
+                            animated mp4 background, use this to collect them.
+                            `hdvideo` - HD version of video.
       --image-size IMAGE_SIZE
                             specify resolution of image to download. check
                             `--size-mode` for more
@@ -158,6 +175,7 @@ Donate with PayPal EUR
                             'no' indicates downloading-only; 'gnome2/3' are only
                             for Linux with gnome; 'win' is for Windows only.
                             Customized setter can be added as dev doc described.
+                            Default: win for win32, gnome3 for Linux
       --setter-args SETTER_ARGS
                             arguments for external setters
       -t OUTPUT_FOLDER, --output-folder OUTPUT_FOLDER
@@ -183,10 +201,15 @@ Donate with PayPal EUR
                             specify server used for meta data and wallpaper photo.
                             you need to set --server to 'custom' to enable the
                             custom server address.
-    
 ----------
 
 ### Release Note
+* **2015-12-08 1.5.0**
+    * Can collect video now! (#34)
+    * Decouple collect mode from market setting (#35)
+    * Better compatibility with win 8 and higher (#31 and #40)
+    * Avoid deleting collected wallpaper at uninstallation (#33)
+
 * **2014-09-08 1.4.4**
     * Support configurable bing server address (#27)
 
@@ -197,7 +220,8 @@ Donate with PayPal EUR
     * Fix #13 enhance robustness of network connection status: retry in
       60 seconds after network failure 
     * Fix #14 download image with Chinese logo whenever a 1920x1200 picture is
-      downloaded: add a collect mode, read [use collect mode](https://github.com/genzj/pybingwallpaper/wiki/Use-collect-mode) 
+      downloaded: add a collect mode, read 
+      [use collect mode](https://github.com/genzj/pybingwallpaper/wiki/Use-collect-mode) 
       [使用收集模式](https://github.com/genzj/pybingwallpaper/wiki/%E4%BD%BF%E7%94%A8%E6%94%B6%E9%9B%86%E6%A8%A1%E5%BC%8F)
       for more
     * Fix #15 use n=1 instead of n=10 for more backtracking room: change
@@ -206,8 +230,11 @@ Donate with PayPal EUR
       settings.conf from the same path of main.py by default
 
 * **2013-12-24 1.4.2**
-    * Support http/https proxy.   
-    Read [配置指南](https://github.com/genzj/pybingwallpaper/wiki/%E5%A6%82%E4%BD%95%E9%85%8D%E7%BD%AE%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F) [Proxy guidance](https://github.com/genzj/pybingwallpaper/wiki/How-to-use-pybingwallpaper-with-proxy) for details.
+    * Support http/https proxy.
+    Read
+    [配置指南](https://github.com/genzj/pybingwallpaper/wiki/%E5%A6%82%E4%BD%95%E9%85%8D%E7%BD%AE%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F) 
+    [Proxy guidance](https://github.com/genzj/pybingwallpaper/wiki/How-to-use-pybingwallpaper-with-proxy) 
+    for details.
 
 * **2013-12-21 1.4.1**
     * Background mode bugfix
