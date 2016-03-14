@@ -71,7 +71,7 @@ def loadurl(url, headers={}, optional=False):
         return None
     if con:
         _logger.debug("Hit %s code: %s", str(con), con.getcode())
-        data = con.read(-1)
+        data = con.read()
         data = _ungzip(data)
         _logger.log(log.PAGEDUMP, repr(data))
         return data
