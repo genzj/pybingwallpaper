@@ -30,7 +30,7 @@
 Name ${PROGRAM_NAME}
 
 ; The file to write
-OutFile "pybingwp-1-5-0.exe"
+OutFile "pybingwp-1-5-1.exe"
 
 InstallDir $PROGRAMFILES\Genzj\${PROGRAM_NAME}
 

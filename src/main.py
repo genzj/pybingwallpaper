@@ -12,7 +12,7 @@ import sched
 import config
 
 NAME = 'pybingwallpaper'
-REV  = '1.5.0'
+REV  = '1.5.1'
 LINK = 'https://github.com/genzj/pybingwallpaper'
 
 if platform == 'win32':
