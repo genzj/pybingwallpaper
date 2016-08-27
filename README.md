@@ -21,7 +21,7 @@ Download installer from any of following links and install it.
 
 **Latest Release 1.5.1**
 * [from dropbox](https://www.dropbox.com/s/fqp1tik67xbxlbw/pybingwp-1-5-1.exe?dl=1) 
-* [Baidu Disk(百度盘)](http://pan.baidu.com/s/1gfNM8nx) 
+* [Baidu Disk(百度盘)](http://pan.baidu.com/s/1hs6Xbuc) 
 
     CRC32: BD22899C
     MD5: B1E6C442641C0E575C9B202D5E00AB59
