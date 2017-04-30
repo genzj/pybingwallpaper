@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
 import unittest
-import sys
 import os
+import sys
+sys.path.append('../pybingwallpaper')
 
-sys.path.append('../src')
-
-from main import get_app_path 
+from main import get_app_path
 
 SOURCE_DIR=''
 
@@ -31,39 +30,39 @@ class TestConfigureParameter(unittest.TestCase):
     def curdir_still_same(self):
         curdir = os.path.abspath(os.curdir)
         self.assertEqual(curdir, self.curdir, 'curdir changed')
-    
+
     def test_run_in_src_dir(self):
-        self.give_work_dir('../src')
+        self.give_work_dir('../pybingwallpaper')
         self.and_app_src('main.py')
-        self.expect_dir(r'E://Work/Python/pybingwallpaper/src')
+        self.expect_dir(r'E://Work/Python/pybingwallpaper/pybingwallpaper')
         self.curdir_still_same()
 
     def test_run_in_cur_dir(self):
         self.give_work_dir('.')
-        self.and_app_src('../src/main.py')
-        self.expect_dir(r'E://Work/Python/pybingwallpaper/src')
+        self.and_app_src('../pybingwallpaper/main.py')
+        self.expect_dir(r'E://Work/Python/pybingwallpaper/pybingwallpaper')
         self.curdir_still_same()
 
     def test_run_from_root(self):
         self.give_work_dir('/')
-        self.and_app_src(r'work/python/pybingwallpaper/src/main.py')
+        self.and_app_src(r'work/python/pybingwallpaper/pybingwallpaper/main.py')
         self.expect_dir(r'E:\Work\Python\pybingwallpaper\src')
         self.curdir_still_same()
 
     def test_run_in_same_disk(self):
         self.give_work_dir('e:\\')
-        self.and_app_src(r'work/python/pybingwallpaper/src/main.py')
+        self.and_app_src(r'work/python/pybingwallpaper/pybingwallpaper/main.py')
         self.expect_dir(r'E:\Work\Python\pybingwallpaper\src')
         self.curdir_still_same()
 
     def test_run_in_other_disk(self):
         self.give_work_dir('d:')
-        self.and_app_src(r'e:/work/python/pybingwallpaper/src/main.py')
+        self.and_app_src(r'e:/work/python/pybingwallpaper/pybingwallpaper/main.py')
         self.expect_dir(r'E:\Work\Python\pybingwallpaper\src')
         self.curdir_still_same()
 
     def test_run_in_other_disk_dir(self):
         self.give_work_dir('c:/windows')
-        self.and_app_src(r'e:/work/python/pybingwallpaper/src/main.py')
+        self.and_app_src(r'e:/work/python/pybingwallpaper/pybingwallpaper/main.py')
         self.expect_dir(r'E:\Work\Python\pybingwallpaper\src')
         self.curdir_still_same()

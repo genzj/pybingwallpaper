@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 from sys import argv, exit as sysexit, platform
 import os
+import errno
 from os.path import expanduser, join as pathjoin, isfile, isdir, splitext
 from os.path import basename, dirname, abspath
-import log
-import webutil
-import bingwallpaper
-import record
-import setter
+from . import log
+from . import webutil
+from . import bingwallpaper
+from . import record
+from . import setter
 import sched
-import config
+from . import config
 
 NAME = 'pybingwallpaper'
 REV  = '1.5.1'
 LINK = 'https://github.com/genzj/pybingwallpaper'
+
 
 if platform == 'win32':
     HISTORY_FILE = pathjoin(
@@ -26,6 +28,7 @@ else:
     HISTORY_FILE = pathjoin(expanduser('~'), '.bing-wallpaper-history.json')
 
 _logger = log.getChild('main')
+
 
 class CannotLoadImagePage(Exception):
     pass
@@ -367,7 +370,7 @@ def prepare_config_db():
             ))
 
     def url(s):
-        from urllib.parse import urlparse
+        from .webutil import urlparse
         url = ('http://'+s) \
             if s and not urlparse(s).scheme \
             else s
@@ -388,13 +391,17 @@ def prepare_config_db():
         configdb.add_param(p)
     return configdb
 
-def prepare_output_dir(d):
+def makedirs(d):
     try:
-        os.makedirs(d, exist_ok=True)
-    except FileExistsError:
-        # even exist_os is true, this exception can also be raised
-        # https://bugs.python.org/issue13498
-        pass
+        os.makedirs(d)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST:
+            pass
+        else:
+            raise
+
+def prepare_output_dir(d):
+    makedirs(d)
     if isdir(d):
         return True
     else:
@@ -504,7 +511,7 @@ def load_history():
         record.default_manager.load(f)
         f.close()
 
-def save_history(records, keepold=False):
+def save_history(records, run_config, keepold=False):
     last_record = records[0]
     if not keepold:
         record.default_manager.clear()
@@ -541,7 +548,7 @@ def set_debug_details(level):
         l = log.PAGEDUMP
     log.setDebugLevel(l)
 
-def main(daemon=None):
+def start(daemon=None):
     if daemon: _logger.info('daemon %s triggers an update', str(daemon))
     # reload config again in case the config file has been modified after
     #last shooting
@@ -567,7 +574,7 @@ def main(daemon=None):
         timeout = run_config.interval*3600
 
     if filerecords:
-        save_history(filerecords)
+        save_history(filerecords, run_config)
     if not filerecords or run_config.setter == 'no':
         _logger.info('nothing to set')
     else:
@@ -693,13 +700,15 @@ def get_app_path(appfile=None):
     os.chdir(oldpath)
     return os.path.normcase(apppath)
 
-
-if __name__ == '__main__':
+def main():
     configdb = prepare_config_db()
     run_config = load_config(configdb)
     set_debug_details(run_config.debug)
     if not run_config.foreground and run_config.background:
         start_daemon()
     else:
-        main(None)
-    sysexit(0)
+        start(None)
+    return 0
+
+if __name__ == '__main__':
+    sysexit(main())

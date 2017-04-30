@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys
-import log
+from . import log
 from importlib import import_module
 import gzip
 from io import BytesIO
@@ -19,7 +19,7 @@ if sys.version_info[:2] < (3, 0):
     urlopen2 = _urllib2.urlopen
     URLError = _urllib2.URLError
 else:
-    from ntlmauth import HTTPNtlmAuthHandler
+    from .ntlmauth import HTTPNtlmAuthHandler
     _logger.debug('importing libs for python 3.x')
     _urllib = import_module('urllib')
     _urlparse = import_module('urllib.parse')
@@ -40,11 +40,11 @@ else:
         pnah= HTTPNtlmAuthHandler.ProxyNtlmAuthHandler(passman)
         pbah= _urlrequest.ProxyBasicAuthHandler(passman)
         pdah= _urlrequest.ProxyDigestAuthHandler(passman)
-        
+
         cp=_urlrequest.HTTPCookieProcessor()
-        opener=_urlrequest.build_opener(cp, 
-                                        _urlrequest.HTTPSHandler(debuglevel=1), 
-                                        _urlrequest.HTTPHandler(debuglevel=99), 
+        opener=_urlrequest.build_opener(cp,
+                                        _urlrequest.HTTPSHandler(debuglevel=1),
+                                        _urlrequest.HTTPHandler(debuglevel=99),
                                         ph, pnah, pbah, pdah,
                                         _urlrequest.HTTPErrorProcessor())
         _urlrequest.install_opener(opener)

@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-import log
+from . import log
 import sys
-import subprocess
+if sys.version_info[0] == 2:
+    import subprocess32 as subprocess
+else:
+    import subprocess
 import os.path
 import glob
 from importlib import import_module
@@ -90,6 +93,6 @@ _default_wallpaper_factory = WallpaperSetterFactory('default')
 register = _default_wallpaper_factory.register
 get = _default_wallpaper_factory.get
 
-if sys.platform == 'linux':
+if sys.platform.startswith('linux'):
     register('gnome2', Gnome2Setter)
     register('gnome3', Gnome3Setter)

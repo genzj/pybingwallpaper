@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 import unittest
-import sys
 import random
 
-sys.path.append('../src')
+import sys
+sys.path.append('../pybingwallpaper')
 
 import config
 from config import ConfigParameter

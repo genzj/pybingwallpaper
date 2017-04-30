@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-import log
+from pybingwallpaper import log
 import sys
 from importlib import import_module
-import setter
+from pybingwallpaper import setter
 from os.path import dirname, splitext
 
-if sys.platform == 'win32':
+if sys.platform.startswith('win32'):
     winreg = import_module('winreg')
     Image =  import_module('PIL.Image')
     win32gui = import_module('win32.win32gui')

@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-import log
+from . import log
 import json
 import datetime
 import sqlite3
 from os.path import isfile
-from collections import UserDict
+
+try:
+    from collections import UserDict
+except ImportError:
+    UserDict = dict
 
 _logger = log.getChild('record')
 #_logger.setLevel(log.DEBUG)
@@ -55,7 +59,7 @@ class DownloadRecordManager(dict):
             else:
                 _logger.debug('%s doesn\'t exist any more', r)
         _logger.debug('history %s loaded', self)
-    
+
     def add(self, r):
         r = dict(r)
         if 'raw' in r:
@@ -80,7 +84,7 @@ class SqlDatabaseRecordManager(DownloadRecordManager):
               [MinorVer] INTEGER,
               [Build] INTEGER);
 
-            INSERT INTO [BingWallpaperCore] 
+            INSERT INTO [BingWallpaperCore]
               (MajorVer, MinorVer, Build)
               VALUES (4, 4, 2);'''),
         }
@@ -95,7 +99,7 @@ class SqlDatabaseRecordManager(DownloadRecordManager):
         cur = conn.cursor()
         for k,v in self.items():
             cur.execute('''
-                INSERT OR REPLACE INTO [BingWallpaperRecords] 
+                INSERT OR REPLACE INTO [BingWallpaperRecords]
                   (Url, DownloadTime, LocalFilePath, Description, Image, IsAccompany, Market)
                   VALUES (?, ?, ?, ?, ?, ?, ?)
             ''', (k, v['time'], v['local_file'], v['description'], v['raw'], v['is_accompany'], v['market']))
@@ -121,7 +125,7 @@ class SqlDatabaseRecordManager(DownloadRecordManager):
             try:
                 cur.executescript(script)
             except Exception as err:
-                _logger.fatal('error happened during database upgrade "%s"', 
+                _logger.fatal('error happened during database upgrade "%s"',
                                 script, exc_info=1)
                 conn.rollback()
                 raise err
@@ -132,13 +136,13 @@ class SqlDatabaseRecordManager(DownloadRecordManager):
         cur = conn.cursor()
         cur.execute('''
             CREATE TABLE [BingWallpaperRecords] (
-              [Url] CHAR(1024) NOT NULL ON CONFLICT FAIL, 
-              [DownloadTime] DATETIME NOT NULL ON CONFLICT FAIL, 
-              [LocalFilePath] CHAR(1024), 
-              [Description] TEXT(1024), 
+              [Url] CHAR(1024) NOT NULL ON CONFLICT FAIL,
+              [DownloadTime] DATETIME NOT NULL ON CONFLICT FAIL,
+              [LocalFilePath] CHAR(1024),
+              [Description] TEXT(1024),
               [Market] TEXT(64) DEFAULT "",
-              [Image] BLOB, 
-              [IsAccompany] BOOLEAN DEFAULT False, 
+              [Image] BLOB,
+              [IsAccompany] BOOLEAN DEFAULT False,
               CONSTRAINT [sqlite_autoindex_BingWallpaperRecords_1] PRIMARY KEY ([Url]));
         ''')
         cur.execute('''
@@ -148,7 +152,7 @@ class SqlDatabaseRecordManager(DownloadRecordManager):
               [Build] INTEGER);
         ''')
         cur.execute('''
-            INSERT INTO [BingWallpaperCore] 
+            INSERT INTO [BingWallpaperCore]
               (MajorVer, MinorVer, Build)
               VALUES (?, ?, ?)
         ''', self.LATEST_DB_VERSION)

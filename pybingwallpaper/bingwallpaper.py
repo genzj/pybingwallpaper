@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import re
-import log
-import webutil
+from . import log
+from . import webutil
 import json
 
 _logger = log.getChild('bingwallpaper')
@@ -26,7 +26,7 @@ class HighResolutionSetting:
 class PreferHighResolution(HighResolutionSetting):
     def getPicUrl(self, rooturl, imgurlbase, fallbackurl, has_wp, *args, **kwargs):
         if has_wp:
-            wplink = webutil.urljoin(rooturl, '_'.join([imgurlbase,'1920x1200.jpg'])) 
+            wplink = webutil.urljoin(rooturl, '_'.join([imgurlbase,'1920x1200.jpg']))
             _logger.debug('in prefer mode, get high resolution url %s', wplink)
         else:
             wplink = webutil.urljoin(rooturl, fallbackurl)
@@ -36,7 +36,7 @@ class PreferHighResolution(HighResolutionSetting):
 class InsistHighResolution(HighResolutionSetting):
     def getPicUrl(self, rooturl, imgurlbase, fallbackurl, has_wp, *args, **kwargs):
         if has_wp:
-            wplink = webutil.urljoin(rooturl, '_'.join([imgurlbase,'1920x1200.jpg'])) 
+            wplink = webutil.urljoin(rooturl, '_'.join([imgurlbase,'1920x1200.jpg']))
             _logger.debug('in insist mode, get high resolution url %s', wplink)
         else:
             wplink = None
@@ -52,10 +52,10 @@ class NeverHighResolution(HighResolutionSetting):
 class HighestResolution(HighResolutionSetting):
     def getPicUrl(self, rooturl, imgurlbase, fallbackurl, has_wp, *args, **kwargs):
         if has_wp:
-            wplink = webutil.urljoin(rooturl, '_'.join([imgurlbase,'1920x1200.jpg'])) 
+            wplink = webutil.urljoin(rooturl, '_'.join([imgurlbase,'1920x1200.jpg']))
             _logger.debug('support wallpaper, get high resolution url %s', wplink)
         else:
-            wplink = webutil.urljoin(rooturl, '_'.join([imgurlbase,'1920x1080.jpg'])) 
+            wplink = webutil.urljoin(rooturl, '_'.join([imgurlbase,'1920x1080.jpg']))
             _logger.debug('not support wallpaper, use second highest resolution %s', wplink)
         return (wplink,)
 
@@ -64,7 +64,7 @@ class ManualHighResolution(HighResolutionSetting):
         if not re.match(r'\d+x\d+', resolution):
             _logger.error('invalid resolution "%s" for manual mode', resolution)
             raise ValueError('invalid resolution "%s"'%(resolution, ))
-        wplink = webutil.urljoin(rooturl, ''.join([imgurlbase, '_', resolution, '.jpg'])) 
+        wplink = webutil.urljoin(rooturl, ''.join([imgurlbase, '_', resolution, '.jpg']))
         _logger.debug('manually specify resolution, use %s', wplink)
         return (wplink,)
 
@@ -142,7 +142,7 @@ AssetCollector.register('hdvideo', HdVideoCollector)
 class BingWallpaperPage:
     BASE_URL='http://www.bing.com'
     IMAGE_API='/HPImageArchive.aspx?format=js&mbl=1&idx={idx}&n={n}&video=1'
-    def __init__(self, idx, n=1, base=BASE_URL, api=IMAGE_API, country_code=None, 
+    def __init__(self, idx, n=1, base=BASE_URL, api=IMAGE_API, country_code=None,
                 market_code=None, high_resolution = PreferHighResolution, resolution='1920x1200',
                 collect=[]):
         self.idx = idx
@@ -179,7 +179,7 @@ class BingWallpaperPage:
 
         # including blank response or 'null' in json
         if not self.content: return False
-        
+
         _logger.debug(self.content)
 
         self.__images = self.content['images']
@@ -203,11 +203,11 @@ class BingWallpaperPage:
         return metadata
 
     def _update_img_link(self):
-        self.wplinks.clear()
+        del self.wplinks[:]
         for i in self.__images:
             metadata = self._get_metadata(i)
             has_wp = i.get('wp', False)
-            _logger.debug('handling %s, rooturl=%s, imgurlbase=%s, has_wp=%s, resolution=%s, act_market=%s', 
+            _logger.debug('handling %s, rooturl=%s, imgurlbase=%s, has_wp=%s, resolution=%s, act_market=%s',
                         i['url'], self.base, i['urlbase'], has_wp, self.resolution, self.act_market)
             wplink = self.high_resolution().getPicUrl(self.base, i['urlbase'], i['url'], has_wp, self.resolution)
             collections = list()
@@ -220,7 +220,7 @@ class BingWallpaperPage:
         self.reset()
         _logger.info('loading from %s', self.url)
         rawfile = webutil.loadpage(self.url)
-        
+
         if rawfile:
             _logger.info('%d bytes loaded', len(rawfile))
             self.__loaded = self._parse(rawfile)
@@ -233,7 +233,7 @@ class BingWallpaperPage:
     @_property_need_loading
     def images(self):
         return self.__images
-    
+
     @_property_need_loading
     def image_links(self):
         return self.wplinks
@@ -251,7 +251,7 @@ class BingWallpaperPage:
 
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__, repr(self.url))
-    
+
     @staticmethod
     def validate_market(market_code):
         #

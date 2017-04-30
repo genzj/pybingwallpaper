@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import log
-from log import PAGEDUMP
+from . import log
+from .log import PAGEDUMP
 import argparse
 import sys
 import io
@@ -21,14 +21,14 @@ def _dumpconfig(parser, level=PAGEDUMP):
 str_to_bool = lambda x: True if bool(x) and x.lower() != 'false' else False
 
 class ConfigParameter:
-    ''' 
+    '''
         ConfigParameter is an abstract of configuration data which integrate config file
         and commandline-like argument data models.
     '''
     def __init__(self, name, defaults=None, type=None, choices=None, help='', loader_srcs=None, loader_opts=None):
         '''
         name        - name of option.
-        defaults    - default values which can be specified as a dict with keys 
+        defaults    - default values which can be specified as a dict with keys
                     specify different default values of corresponding platform,
                     e.g. {'win32': True, 'linux': False, 'darwin': False, '*': True}
                     name of platforms are defined as in sys.platform and '*' stands for
@@ -132,11 +132,11 @@ from configparser import ConfigParser
 class ConfigFileLoader(ConfigLoader):
     '''
     Options keyword: 'conffile'
-    Supported options can be set in ConfigParameter: 
-        section - under which section this value is saved 
+    Supported options can be set in ConfigParameter:
+        section - under which section this value is saved
                   use the DEFAULT section if not specified
         key     - with what name this value is saved
-        converter 
+        converter
                 - a callable which converts string to desired object
                   use type_cast of parameter if not specified
     Ref:
@@ -160,7 +160,7 @@ class ConfigFileLoader(ConfigLoader):
         else:
             value = None
             loaded = False
-        if loaded: 
+        if loaded:
             value = converter(value)
             if hasattr(param, 'choices') and value not in param.choices:
                 raise ConfigFileLoader.ConfigValueError(
@@ -185,8 +185,8 @@ class ConfigFileLoader(ConfigLoader):
 class ConfigFileDumper(ConfigDumper):
     '''
     Options keyword: 'conffile'
-    Supported options can be set in ConfigParameter: 
-        section - under which section this value is saved 
+    Supported options can be set in ConfigParameter:
+        section - under which section this value is saved
                   use the DEFAULT section if not specified
         key     - with what name this value is saved.
                   use the name of parameter if not given
@@ -225,7 +225,7 @@ class ConfigFileDumper(ConfigDumper):
             if not param.is_loader_supported(self.OPT_KEY): continue
             section = param.get_option(self.OPT_KEY, 'section', parser.default_section)
             if section != parser.default_section and \
-                    not parser.has_section(section): 
+                    not parser.has_section(section):
                 parser.add_section(section)
             formatter = param.get_option(self.OPT_KEY, 'formatter', str)
             parser.set(section, k, formatter(v))
@@ -240,9 +240,9 @@ class ConfigFileDumper(ConfigDumper):
 class CommandLineArgumentsLoader(ConfigLoader):
     '''
     Options keyword: 'cli'
-    Supported options can be set in ConfigParameter: 
+    Supported options can be set in ConfigParameter:
         flags - container which will be converted to CLI option flags
-        other options can be found here 
+        other options can be found here
             http://docs.python.org/3/library/argparse.html#argparse.ArgumentParser.add_argument
     '''
     OPT_KEY = 'cli'
@@ -261,7 +261,7 @@ class CommandLineArgumentsLoader(ConfigLoader):
             opts['default'] = param.get_default()
         else:
             opts['default'] = argparse.SUPPRESS
-        
+
         # load specific options at last so that
         # specific ones take higher priority in case a same
         # key occurs in both common part and loader_opts part
@@ -292,7 +292,7 @@ class CommandLineArgumentsLoader(ConfigLoader):
             if not param.is_loader_supported(CommandLineArgumentsLoader.OPT_KEY): continue
             _logger.debug('loading %s', param)
             parser.add_argument(
-                    *CommandLineArgumentsLoader.param_to_arg_flags(param), 
+                    *CommandLineArgumentsLoader.param_to_arg_flags(param),
                     **CommandLineArgumentsLoader.param_to_arg_opts(param, generate_default)
             )
         return parser
