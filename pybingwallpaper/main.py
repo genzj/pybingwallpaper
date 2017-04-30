@@ -13,7 +13,7 @@ import sched
 from . import config
 
 NAME = 'pybingwallpaper'
-REV  = '1.5.1'
+REV  = '1.5.2'
 LINK = 'https://github.com/genzj/pybingwallpaper'
 
 
