@@ -1,6 +1,6 @@
 import os
 import sys
-from pybingwallpaper.main import REV
+from pybingwallpaper.rev import REV
 from setuptools import setup, find_packages
 
 # Utility function to read the README file.

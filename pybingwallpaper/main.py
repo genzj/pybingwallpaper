@@ -11,9 +11,9 @@ from . import record
 from . import setter
 import sched
 from . import config
+from .rev import REV
 
 NAME = 'pybingwallpaper'
-REV  = '1.5.2'
 LINK = 'https://github.com/genzj/pybingwallpaper'
 
 
@@ -462,13 +462,14 @@ def download_wallpaper(run_config):
                                     raw=None if run_config.database_no_image else raw,
                                     market=metadata['market'])
         records.append(r)
-        collect_assets(wplinks[1:], metadata, run_config.output_folder, records)
+        collect_assets(wplinks[1:], metadata, run_config, records)
         return records
 
     _logger.info('bad luck, no wallpaper today:(')
     return None
 
-def collect_assets(wplinks, metadata, output_folder, records):
+def collect_assets(wplinks, metadata, run_config, records):
+    output_folder = run_config.output_folder
     copyright = metadata['copyright']
     market = metadata['market']
     for link in wplinks:
@@ -503,8 +504,11 @@ def get_output_filename(run_config, link):
 def load_history():
     try:
         f = open(HISTORY_FILE, 'r')
-    except FileNotFoundError:
-        _logger.info('{} not found, ignore download history'.format(HISTORY_FILE))
+    except IOError as ex:
+        if ex.errno == errno.ENOENT:
+            _logger.info('{} not found, ignore download history'.format(HISTORY_FILE))
+        else:
+            _logger.warning('error occurs when recover downloading history', exc_info=1)
     except Exception:
         _logger.warning('error occurs when recover downloading history', exc_info=1)
     else:
@@ -587,15 +591,15 @@ def start(daemon=None):
         _logger.info('all done. enjoy your new wallpaper')
 
     if not run_config.foreground and run_config.background and daemon:
-        schedule_next_poll(timeout, daemon)
+        schedule_next_poll(timeout, daemon, run_config.interval)
     elif run_config.foreground:
         _logger.info('force foreground mode from command line')
 
-def schedule_next_poll(timeout, daemon):
+def schedule_next_poll(timeout, daemon, interval):
     if not daemon:
         _logger.error('no scheduler')
     else:
-        _logger.debug('schedule next running in %d seconds', run_config.interval*3600)
+        _logger.debug('schedule next running in %d seconds', interval*3600)
         daemon.enter(timeout, 1, main, (daemon, ))
 
 def start_daemon():

@@ -17,6 +17,15 @@ if sys.platform.startswith('win'):
     ])
     datas.insert(0, (pathjoin('pybingwallpaper', 'winsetter.py'), '.'))
 
+if sys.version_info[:2] < (3, 0):
+    hiddenimports.extend([
+        'urllib', 'urllib2', 'urlparse',
+    ])
+else:
+    hiddenimports.extend([
+        'urllib',
+    ])
+
 block_cipher = None
 
 a = Analysis([pathjoin('bin', 'BingWallpaper')],
