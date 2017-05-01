@@ -600,12 +600,12 @@ def schedule_next_poll(timeout, daemon, interval):
         _logger.error('no scheduler')
     else:
         _logger.debug('schedule next running in %d seconds', interval*3600)
-        daemon.enter(timeout, 1, main, (daemon, ))
+        daemon.enter(timeout, 1, start, (daemon, ))
 
 def start_daemon():
     daemon = sched.scheduler()
 
-    main(daemon)
+    start(daemon)
     _logger.info('daemon %s is running', str(daemon))
     daemon.run()
     _logger.info('daemon %s exited', str(daemon))

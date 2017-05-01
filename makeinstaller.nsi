@@ -1,6 +1,6 @@
 ; example2.nsi
 ;
-; This script is based on example1.nsi, but it remember the directory, 
+; This script is based on example1.nsi, but it remember the directory,
 ; has uninstall support and (optionally) installs start menu shortcuts.
 ;
 ; It will install example2.nsi into a directory that the user selects,
@@ -30,11 +30,11 @@
 Name ${PROGRAM_NAME}
 
 ; The file to write
-OutFile "pybingwp-1-5-1.exe"
+OutFile "pybingwp-1-5-2.exe"
 
 InstallDir $PROGRAMFILES\Genzj\${PROGRAM_NAME}
 
-; Registry key to check for directory (so if you install again, it will 
+; Registry key to check for directory (so if you install again, it will
 ; overwrite the old one automatically)
 InstallDirRegKey HKLM "Software\Genzj\${PROGRAM_NAME}" "Install_Dir"
 
@@ -52,8 +52,8 @@ LicenseData $(license)
 ;Language Selection Dialog Settings
 
   ;Remember the installer language
-  ;!define MUI_LANGDLL_REGISTRY_ROOT "HKCU" 
-  ;!define MUI_LANGDLL_REGISTRY_KEY "Software\Genzj" 
+  ;!define MUI_LANGDLL_REGISTRY_ROOT "HKCU"
+  ;!define MUI_LANGDLL_REGISTRY_KEY "Software\Genzj"
   ;!define MUI_LANGDLL_REGISTRY_VALUENAME "Installer Language"
 
 ;--------------------------------
@@ -69,13 +69,13 @@ Var STARTUP_MODE
   !insertmacro MUI_PAGE_COMPONENTS
   !insertmacro MUI_PAGE_DIRECTORY
   !insertmacro MUI_PAGE_INSTFILES
-  
+
   !insertmacro MUI_UNPAGE_CONFIRM
   !insertmacro MUI_UNPAGE_INSTFILES
-  
+
 ;--------------------------------
 ;Languages
- 
+
   !insertmacro MUI_LANGUAGE "English"
   !insertmacro MUI_LANGUAGE "SimpChinese"
 
@@ -85,11 +85,11 @@ LicenseLangString license ${LANG_SimpChinese} LICENSE-zhcn.txt
 
 ;--------------------------------
 ;Reserve Files
-  
+
   ;If you are using solid compression, files that are required before
   ;the actual installation should be stored first in the data block,
   ;because this will make your installer start faster.
-  
+
   !insertmacro MUI_RESERVEFILE_LANGDLL
 
 
@@ -99,22 +99,22 @@ LicenseLangString license ${LANG_SimpChinese} LICENSE-zhcn.txt
 Section $(NAME_SecMain) SecMain
 
   SectionIn RO
-  
+
   ; Set output path to the installation directory.
   SetOutPath $INSTDIR
 
   ; Build target files
-  !system 'python setup.py build'
+  !system 'pyinstaller -y build.spec'
 
   ; Put file there
-  !cd ./build/exe.win32-3.4
+  !cd ./dist/BingWallpaper
   File /x *.pyc /x __pycache__ /x tk*.dll /x tcl*.dll "*"
   !cd ../..
   File "res\bingwallpaper.ico"
-  
+
   ; Write the installation path into the registry
   WriteRegStr HKLM Software\Genzj\${PROGRAM_NAME} "Install_Dir" "$INSTDIR"
-  
+
   ; Write the uninstall keys for Windows
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PROGRAM_NAME}" "DisplayName" ${PROGRAM_NAME}
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PROGRAM_NAME}" "UninstallString" '"$INSTDIR\uninstall.exe"'
@@ -204,12 +204,12 @@ SectionEnd
 ;Descriptions
 
   ;USE A LANGUAGE STRING IF YOU WANT YOUR DESCRIPTIONS TO BE LANGAUGE SPECIFIC
-  LangString NAME_SecMain ${LANG_ENGLISH} "!PyBingWallpaper Main Programs" 
-  LangString NAME_SecStartMenu ${LANG_ENGLISH} "Start Menu Shortcuts" 
+  LangString NAME_SecMain ${LANG_ENGLISH} "!PyBingWallpaper Main Programs"
+  LangString NAME_SecStartMenu ${LANG_ENGLISH} "Start Menu Shortcuts"
   LangString NAME_SecStartup ${LANG_ENGLISH} "Run at Windows Startup"
-  LangString NAME_SecStartupOnce ${LANG_ENGLISH} "Don't run in background after auto start." 
-  LangString NAME_SecRunit ${LANG_ENGLISH} "Change Wallpaper After Installation" 
-  LangString NAME_SecGrCountry ${LANG_ENGLISH} "Country Setting" 
+  LangString NAME_SecStartupOnce ${LANG_ENGLISH} "Don't run in background after auto start."
+  LangString NAME_SecRunit ${LANG_ENGLISH} "Change Wallpaper After Installation"
+  LangString NAME_SecGrCountry ${LANG_ENGLISH} "Country Setting"
 
   LangString DESC_SecMain ${LANG_ENGLISH} "Main program files of ${PROGRAM_NAME}."
   LangString DESC_SecStartMenu ${LANG_ENGLISH} "Create Start Menu shortcuts for ${PROGRAM_NAME}"
@@ -218,17 +218,17 @@ SectionEnd
   LangString DESC_SecRunit ${LANG_ENGLISH} "Run ${PROGRAM_NAME} and change wallpaper immediately after installation"
   LangString DESC_SecGrCountry ${LANG_ENGLISH} "Bing.com wallpaper may vary from countries. Those countries marked (HD) support high resolution wallpapers(1920x1200)"
 
-  LangString ASK_FOR_CONFIG_DEL1 ${LANG_ENGLISH} "Do you want to remove all files in installation path?" 
-  LangString ASK_FOR_CONFIG_DEL2 ${LANG_ENGLISH} "Removed files (including configuration, wallpapers if you put them under installation path) can't be restored, are you sure you want to remove them?" 
-  
+  LangString ASK_FOR_CONFIG_DEL1 ${LANG_ENGLISH} "Do you want to remove all files in installation path?"
+  LangString ASK_FOR_CONFIG_DEL2 ${LANG_ENGLISH} "Removed files (including configuration, wallpapers if you put them under installation path) can't be restored, are you sure you want to remove them?"
 
 
-  LangString NAME_SecMain ${LANG_SimpChinese} "PyBingWallpaper主程序" 
-  LangString NAME_SecStartMenu ${LANG_SimpChinese} "创建开始菜单快捷方式" 
+
+  LangString NAME_SecMain ${LANG_SimpChinese} "PyBingWallpaper主程序"
+  LangString NAME_SecStartMenu ${LANG_SimpChinese} "创建开始菜单快捷方式"
   LangString NAME_SecStartup ${LANG_SimpChinese} "系统启动时运行"
-  LangString NAME_SecStartupOnce ${LANG_SimpChinese} "自动运行不驻留内存"  
-  LangString NAME_SecRunit ${LANG_SimpChinese} "立即更换桌面" 
-  LangString NAME_SecGrCountry ${LANG_SimpChinese} "国家设置" 
+  LangString NAME_SecStartupOnce ${LANG_SimpChinese} "自动运行不驻留内存"
+  LangString NAME_SecRunit ${LANG_SimpChinese} "立即更换桌面"
+  LangString NAME_SecGrCountry ${LANG_SimpChinese} "国家设置"
 
   LangString DESC_SecMain ${LANG_SimpChinese} "${PROGRAM_NAME}主程序文件"
   LangString DESC_SecStartMenu ${LANG_SimpChinese} "在开始菜单创建${PROGRAM_NAME}快捷方式"
@@ -237,8 +237,8 @@ SectionEnd
   LangString DESC_SecRunit ${LANG_SimpChinese} "安装完成后启动${PROGRAM_NAME}（需要访问网络）"
   LangString DESC_SecGrCountry ${LANG_SimpChinese} "不同国家访问Bing.com时桌面可能会不同。标有HD的分站支持高分辨率桌面(1920x1200)"
 
-  LangString ASK_FOR_CONFIG_DEL1 ${LANG_SimpChinese} "是否删除安装目录下的所有文件？" 
-  LangString ASK_FOR_CONFIG_DEL2 ${LANG_SimpChinese} "安装目录下的所有文件（包括配置文件和其他用户创建文件）删除后不可恢复！确认删除？" 
+  LangString ASK_FOR_CONFIG_DEL1 ${LANG_SimpChinese} "是否删除安装目录下的所有文件？"
+  LangString ASK_FOR_CONFIG_DEL2 ${LANG_SimpChinese} "安装目录下的所有文件（包括配置文件和其他用户创建文件）删除后不可恢复！确认删除？"
 
   ;Assign descriptions to sections
   !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
@@ -263,18 +263,18 @@ Function un.kill_running_instances
   KillProc::FindProcesses
   StrCmp $1 "-1" wooops
   DetailPrint "-> Found $0 processes"
- 
+
   StrCmp $0 "0" completed
   Sleep 1500
- 
+
   StrCpy $0 $R1
   DetailPrint "Killing all processes called '$0'"
   KillProc::KillProcesses
   StrCmp $1 "-1" wooops
   DetailPrint "-> Killed $0 processes, failed to kill $1 processes"
- 
+
   Goto completed
- 
+
   wooops:
   DetailPrint "-> Error: Something went wrong :-("
   Pop $1
@@ -288,13 +288,13 @@ Function un.kill_running_instances
 FunctionEnd
 
 Section "Uninstall"
-  
+
   StrCpy $R1 "BingWallpaper.exe"
   Call un.kill_running_instances
-  
+
   StrCpy $R1 "BingWallpaper-cli.exe"
   Call un.kill_running_instances
-  
+
   ; Remove registry keys
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PROGRAM_NAME}"
   DeleteRegKey HKLM "Software\Genzj\${PROGRAM_NAME}"
@@ -331,20 +331,20 @@ SectionEnd
 Function upgrade
   Push $R0
 ; Uninstall old version before install a new one
-  ReadRegStr $R0 HKLM \  
+  ReadRegStr $R0 HKLM \
         "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PROGRAM_NAME}" \
         "UninstallString"
   StrCmp $R0 "" done
   MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
           "${PROGRAM_NAME} is already installed. $\n$\nClick 'OK' to remove the \
           previous version or 'Cancel' to cancel this upgrade." \
-          IDOK uninst  
+          IDOK uninst
   Abort
 
-uninst:  
+uninst:
   ReadRegStr $R0 HKLM "Software\Genzj\${PROGRAM_NAME}" "Install_Dir"
   ClearErrors
-  Exec $R0\uninstall.exe 
+  Exec $R0\uninstall.exe
 done:
   Pop $R0
 FunctionEnd
@@ -353,7 +353,7 @@ Function .onInit
   StrCpy $COUNTRY_CODE "us"
   StrCpy $COUNTRY_CHOSEN ${country_us}
   StrCpy $STARTUP_MODE ""
-   
+
   ; issue #31: for win7 and above, program files folder is access-limited so
   ; that editing configuration file becomes inconvenient. install to appdata
   ; instead
