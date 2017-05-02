@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 from . import log
-from .py23 import PY3, get_moved_attr
+from .py23 import get_moved_attr, import_moved
+from .ntlmauth import HTTPNtlmAuthHandler
+
 import gzip
 from io import BytesIO
 
@@ -12,32 +14,27 @@ URLError = get_moved_attr('urllib2', 'urllib.error', 'URLError')
 urlparse = get_moved_attr('urlparse', 'urllib.parse', 'urlparse')
 urlencode = get_moved_attr('urllib', 'urllib.parse', 'urlencode')
 urljoin = get_moved_attr('urlparse', 'urllib.parse', 'urljoin')
+url_request = import_moved('urllib2', 'urllib.request')
 
 
-if PY3:
-    from .ntlmauth import HTTPNtlmAuthHandler
-    from importlib import import_module
-    _logger.debug('importing libs for python 3.x')
-    _urlrequest = import_module('urllib.request')
+def setup_proxy(proxy_protocols, proxy_url, proxy_port, sites, username="", password=""):
+    proxy_dict = {p:'%s:%s'%(proxy_url, proxy_port) for p in proxy_protocols}
+    ph=url_request.ProxyHandler(proxy_dict)
+    passman = url_request.HTTPPasswordMgrWithDefaultRealm()
 
-    def setup_proxy(proxy_protocols, proxy_url, proxy_port, sites, username="", password=""):
-        proxy_dict = {p:'%s:%s'%(proxy_url, proxy_port) for p in proxy_protocols}
-        ph=_urlrequest.ProxyHandler(proxy_dict)
-        passman = _urlrequest.HTTPPasswordMgrWithDefaultRealm()
+    _logger.info('add proxy site %s', sites)
+    passman.add_password(None, sites, username, password)
+    pnah= HTTPNtlmAuthHandler.ProxyNtlmAuthHandler(passman)
+    pbah= url_request.ProxyBasicAuthHandler(passman)
+    pdah= url_request.ProxyDigestAuthHandler(passman)
 
-        _logger.info('add proxy site %s', sites)
-        passman.add_password(None, sites, username, password)
-        pnah= HTTPNtlmAuthHandler.ProxyNtlmAuthHandler(passman)
-        pbah= _urlrequest.ProxyBasicAuthHandler(passman)
-        pdah= _urlrequest.ProxyDigestAuthHandler(passman)
-
-        cp=_urlrequest.HTTPCookieProcessor()
-        opener=_urlrequest.build_opener(cp,
-                                        _urlrequest.HTTPSHandler(debuglevel=1),
-                                        _urlrequest.HTTPHandler(debuglevel=99),
-                                        ph, pnah, pbah, pdah,
-                                        _urlrequest.HTTPErrorProcessor())
-        _urlrequest.install_opener(opener)
+    cp=url_request.HTTPCookieProcessor()
+    opener=url_request.build_opener(cp,
+                                    url_request.HTTPSHandler(debuglevel=1),
+                                    url_request.HTTPHandler(debuglevel=99),
+                                    ph, pnah, pbah, pdah,
+                                    url_request.HTTPErrorProcessor())
+    url_request.install_opener(opener)
 
 
 def _ungzip(html):
@@ -95,5 +92,6 @@ def postto(url, datadict, headers={}, decodec='gbk'):
 if __name__ == '__main__':
     _logger.setLevel(log.PAGEDUMP)
     _logger.info('try loading a paage')
+    # setup_proxy(('http', 'https'), 'http://127.0.0.1', '8123', ('ifconfig.me',))
     c = loadpage('http://ifconfig.me/all', headers={'User-Agent':'curl'})
     _logger.info('page content: \n%s', c)

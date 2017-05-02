@@ -2,30 +2,35 @@
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation, either
 # version 3 of the License, or (at your option) any later version.
- 
+
 # This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Lesser General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library.  If not, see <http://www.gnu.org/licenses/> or <http://www.gnu.org/licenses/lgpl.txt>.
 
-import urllib.request, urllib.error
-import http.client, socket
-from urllib.response import addinfourl
-from urllib.request import HTTPPasswordMgr
+import socket
 from . import ntlm
+from ..py23 import get_moved_attr, import_moved
 import inspect
+
+urllib_request = import_moved('urllib2', 'urllib.request')
+HTTPConnection = get_moved_attr('httplib', 'http.client', 'HTTPConnection')
+HTTPSConnection = get_moved_attr('httplib', 'http.client', 'HTTPSConnection')
+addinfourl = get_moved_attr('urllib', 'urllib.response', 'addinfourl')
+URLError = get_moved_attr('urllib2', 'urllib.error', 'URLError')
+
 def debug_output(*args, **kwargs):
     lineno = inspect.currentframe().f_back.f_lineno
     #print("debug at line ", lineno, ": ", *args, **kwargs)
 
 class AbstractNtlmAuthHandler:
-    
+
     def __init__(self, password_mgr=None):
         if password_mgr is None:
-            password_mgr = HTTPPasswordMgr()
+            password_mgr = urllib_request.HTTPPasswordMgr()
         self.passwd = password_mgr
         self.add_password = self.passwd.add_password
 
@@ -58,15 +63,15 @@ class AbstractNtlmAuthHandler:
                 debug_output("no auth_header")
                 return None
             headers[self.auth_header] = auth
-            
+
             host = req.get_host()
             if not host:
-                raise urllib.request.URLError('no host given')
+                raise URLError('no host given')
             h = None
             if req.get_full_url().startswith('https://'):
-                h = http.client.HTTPSConnection(host) # will parse host:port
+                h = HTTPSConnection(host) # will parse host:port
             else:
-                h = http.client.HTTPConnection(host) # will parse host:port
+                h = HTTPConnection(host) # will parse host:port
             # we must keep the connection because NTLM authenticates the connection, not single requests
             headers["Connection"] = "Keep-Alive"
             headers = dict((name.title(), val) for name, val in list(headers.items()))
@@ -76,7 +81,7 @@ class AbstractNtlmAuthHandler:
             r._safe_read(int(r.getheader('content-length')))
             debug_output('data read')
             try:
-                if r.getheader('set-cookie'): 
+                if r.getheader('set-cookie'):
                     # this is important for some web applications that store authentication-related info in cookies (it took a long time to figure out)
                     headers['Cookie'] = r.getheader('set-cookie')
                     debug_output('cookie: ', headers['Cookie'])
@@ -104,12 +109,12 @@ class AbstractNtlmAuthHandler:
                 response.readline = notimplemented
                 return addinfourl(response, response.msg, req.get_full_url())
             except socket.error as err:
-                raise urllib.request.URLError(err)
-        else:  
+                raise URLError(err)
+        else:
             return None
 
 
-class HTTPNtlmAuthHandler(AbstractNtlmAuthHandler, urllib.request.BaseHandler):
+class HTTPNtlmAuthHandler(AbstractNtlmAuthHandler, urllib_request.BaseHandler):
 
     auth_header = 'Authorization'
     handler_order = 480 # before Digest & Basic auth
@@ -118,9 +123,9 @@ class HTTPNtlmAuthHandler(AbstractNtlmAuthHandler, urllib.request.BaseHandler):
         return self.http_error_authentication_required('www-authenticate', req, fp, headers)
 
 
-class ProxyNtlmAuthHandler(AbstractNtlmAuthHandler, urllib.request.BaseHandler):
-    """ 
-        CAUTION: this class has NOT been tested at all!!! 
+class ProxyNtlmAuthHandler(AbstractNtlmAuthHandler, urllib_request.BaseHandler):
+    """
+        CAUTION: this class has NOT been tested at all!!!
         use at your own risk
     """
     auth_header = 'Proxy-authorization'
@@ -134,18 +139,18 @@ if __name__ == "__main__":
     url = "http://ntlmprotectedserver/securedfile.html"
     user = "DOMAIN\\User"
     password = "Password"
-    passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+    passman = urllib_request.HTTPPasswordMgrWithDefaultRealm()
     passman.add_password(None, url, user , password)
-    auth_basic = urllib.request.HTTPBasicAuthHandler(passman)
-    auth_digest = urllib.request.HTTPDigestAuthHandler(passman)
+    auth_basic = urllib_request.HTTPBasicAuthHandler(passman)
+    auth_digest = urllib_request.HTTPDigestAuthHandler(passman)
     auth_NTLM = HTTPNtlmAuthHandler(passman)
-    
-    # disable proxies (just for testing)
-    proxy_handler = urllib.request.ProxyHandler({}) 
 
-    opener = urllib.request.build_opener(proxy_handler, auth_NTLM) #, auth_digest, auth_basic)
-    
-    urllib.request.install_opener(opener)
-    
-    response = urllib.request.urlopen(url)
+    # disable proxies (just for testing)
+    proxy_handler = urllib_request.ProxyHandler({})
+
+    opener = urllib_request.build_opener(proxy_handler, auth_NTLM) #, auth_digest, auth_basic)
+
+    urllib_request.install_opener(opener)
+
+    response = urllib_request.urlopen(url)
     print((response.read()))
