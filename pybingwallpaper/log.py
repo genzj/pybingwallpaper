@@ -13,7 +13,7 @@ def __init(projname):
     if not _logger.handlers:
         _loggerHandler = logging.StreamHandler()
         _loggerHandler.setLevel(PAGEDUMP)
-        _loggerHandler.setFormatter(logging.Formatter('[%(asctime)s - %(levelname)s - %(module)s] %(message)s'))
+        _loggerHandler.setFormatter(logging.Formatter('[%(asctime)s - %(levelname)s - %(name)s] %(message)s'))
         _logger.addHandler(_loggerHandler)
         _logger.setLevel(INFO)
 

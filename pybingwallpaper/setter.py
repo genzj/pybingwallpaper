@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 from . import log
+from .py23 import import_moved
 import sys
-if sys.version_info[0] == 2:
-    import subprocess32 as subprocess
-else:
-    import subprocess
+
 import os.path
 import glob
 from importlib import import_module
+
+subprocess = import_moved('subprocess32', 'subprocess')
+
 
 class WallpaperSetter:
     def __init__(self):

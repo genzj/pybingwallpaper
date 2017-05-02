@@ -1,34 +1,24 @@
 #!/usr/bin/env python
-import sys
 from . import log
-from importlib import import_module
+from .py23 import PY3, get_moved_attr
 import gzip
 from io import BytesIO
 
 _logger = log.getChild('webutil')
 
-if sys.version_info[:2] < (3, 0):
-    _logger.debug('importing libs for python 2.x')
-    _urllib = import_module('urllib')
-    _urllib2 = import_module('urllib2')
-    _urlparse = import_module('urlparse')
-    urlparse = _urlparse.urlparse
-    urlencode = _urllib.urlencode
-    unquote = _urllib.urlencode
-    Request = _urllib2.Request
-    urlopen2 = _urllib2.urlopen
-    URLError = _urllib2.URLError
-else:
+Request = get_moved_attr('urllib2', 'urllib.request', 'Request')
+urlopen = get_moved_attr('urllib2', 'urllib.request', 'urlopen')
+URLError = get_moved_attr('urllib2', 'urllib.error', 'URLError')
+urlparse = get_moved_attr('urlparse', 'urllib.parse', 'urlparse')
+urlencode = get_moved_attr('urllib', 'urllib.parse', 'urlencode')
+urljoin = get_moved_attr('urlparse', 'urllib.parse', 'urljoin')
+
+
+if PY3:
     from .ntlmauth import HTTPNtlmAuthHandler
+    from importlib import import_module
     _logger.debug('importing libs for python 3.x')
-    _urllib = import_module('urllib')
-    _urlparse = import_module('urllib.parse')
     _urlrequest = import_module('urllib.request')
-    urlparse = _urlparse.urlparse
-    urlencode = _urlparse.urlencode
-    Request = _urlrequest.Request
-    urlopen2 = _urlrequest.urlopen
-    URLError = _urllib.error.URLError
 
     def setup_proxy(proxy_protocols, proxy_url, proxy_port, sites, username="", password=""):
         proxy_dict = {p:'%s:%s'%(proxy_url, proxy_port) for p in proxy_protocols}
@@ -49,7 +39,6 @@ else:
                                         _urlrequest.HTTPErrorProcessor())
         _urlrequest.install_opener(opener)
 
-urljoin = _urlparse.urljoin
 
 def _ungzip(html):
     if html[:6] == b'\x1f\x8b\x08\x00\x00\x00':
@@ -63,7 +52,7 @@ def loadurl(url, headers={}, optional=False):
         headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1521.3 Safari/537.36'
     try:
         req = Request(url=url, headers=headers)
-        con = urlopen2(req)
+        con = urlopen(req)
     except Exception as err:
         if not optional:
             _logger.error('error %s occurs during load %s with header %s', err, url, headers)
@@ -90,7 +79,7 @@ def postto(url, datadict, headers={}, decodec='gbk'):
         req = Request(url=url, data=params)
         for k,v in list(headers.items()):
             req.add_header(k,v)
-        con = urlopen2(req)
+        con = urlopen(req)
         if con:
             _logger.debug("Hit %s %d", str(con), con.getcode())
             data = con.read(-1)
