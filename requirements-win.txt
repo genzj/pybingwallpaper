@@ -1,0 +1,2 @@
+Pillow>=4
+pypiwin32

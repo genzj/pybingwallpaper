@@ -20,6 +20,7 @@ if sys.platform.startswith('win'):
 if sys.version_info[:2] < (3, 0):
     hiddenimports.extend([
         'urllib', 'urllib2', 'urlparse',
+        'subprocess32', 'configparser',
     ])
 else:
     hiddenimports.extend([
