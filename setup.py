@@ -47,7 +47,7 @@ setup(
         ],
     },
 
-    long_description=read('README.md'),
+    long_description=read('README.rst'),
     classifiers=[
         'Development Status :: 6 - Mature',
         'Environment :: Console',
@@ -55,6 +55,21 @@ setup(
         'Intended Audience :: End Users/Desktop',
         'License :: OSI Approved :: MIT License',
 
+        'Operating System :: Microsoft :: Windows :: Windows XP',
+        'Operating System :: Microsoft :: Windows :: Windows Vista',
+        'Operating System :: Microsoft :: Windows :: Windows 7',
+        'Operating System :: Microsoft :: Windows :: Windows 8',
+        'Operating System :: Microsoft :: Windows :: Windows 8.1',
+        'Operating System :: Microsoft :: Windows :: Windows 10',
+        'Operating System :: POSIX :: Linux',
+        'Operating System :: POSIX :: Other',
+
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.3',
+        'Programming Language :: Python :: 2.4',
+        'Programming Language :: Python :: 2.5',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
