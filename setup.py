@@ -17,7 +17,8 @@ def read(fname):
     return fopen(os.path.join(os.path.dirname(__file__), fname), encoding='utf8').read()
 
 def os_requires():
-    return ['Pillow', 'pypiwin32'] if sys.platform == 'win32' else []
+    return ['Pillow', 'pypiwin32'] if sys.platform == 'win32' else \
+            ['appscript'] if sys.platform == 'darwin' else []
 
 def backport_requires():
     return ['configparser', 'subprocess32'] if sys.version_info[0] == 2 else []

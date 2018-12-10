@@ -97,3 +97,4 @@ get = _default_wallpaper_factory.get
 if sys.platform.startswith('linux'):
     register('gnome2', Gnome2Setter)
     register('gnome3', Gnome3Setter)
+

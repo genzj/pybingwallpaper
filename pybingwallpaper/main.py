@@ -36,6 +36,8 @@ class CannotLoadImagePage(Exception):
 def load_setters():
     if platform == 'win32':
         return ['no', 'win']
+    elif platform == 'darwin':
+        return ['no', 'darwin']
     else:
         return ['no', 'gnome3', 'gnome2']
 
