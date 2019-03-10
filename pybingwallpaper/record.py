@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-from . import log
-import json
 import datetime
+import json
 import sqlite3
 from os.path import isfile
+
+from . import log
 
 try:
     from collections import UserDict
@@ -11,11 +12,15 @@ except ImportError:
     UserDict = dict
 
 _logger = log.getChild('record')
-#_logger.setLevel(log.DEBUG)
 
-class DownloadRecord(dict):
-    def __init__(self, url, local_file, description,
-                  download_time=None, raw=None, is_accompany=False, market=''):
+
+# _logger.setLevel(log.DEBUG)
+
+class DownloadRecord(UserDict):
+    def __init__(
+            self, url, local_file, description,
+            download_time=None, raw=None, is_accompany=False, market=''
+    ):
         UserDict.__init__(self)
         if download_time is None:
             download_time = datetime.datetime.utcnow()
@@ -29,7 +34,9 @@ class DownloadRecord(dict):
         self['is_accompany'] = is_accompany
         self['market'] = market
 
+
 null_record = DownloadRecord('', '', 'Null Record', datetime.datetime.utcfromtimestamp(0))
+
 
 class DownloadRecordManager(dict):
     def __init__(self, name):
@@ -44,14 +51,14 @@ class DownloadRecordManager(dict):
         self.clear()
         try:
             content = json.load(f)
-        except:
+        except Exception:
             _logger.warning('error occurs when load json file', exc_info=1)
             return
         _logger.debug('json file loaded:\n%s', str(content))
         for r in content.values():
             try:
                 exists = isfile(r['local_file'])
-            except:
+            except Exception:
                 _logger.debug('error occurs when detecting saved file', exc_info=1)
                 exists = False
             if exists:
@@ -69,13 +76,15 @@ class DownloadRecordManager(dict):
     def get_by_url(self, url, default_rec=null_record):
         return self.get(url, default_rec)
 
+
 default_manager = DownloadRecordManager('default')
+
 
 class SqlDatabaseRecordManager(DownloadRecordManager):
     LATEST_DB_VERSION = (4, 4, 2)
     DB_UPGRADE_SCRIPTS = {
-            #from_ver:  (to_ver, sql)
-            (4, 4, 1):  ((4, 4, 2), '''
+        # from_ver:  (to_ver, sql)
+        (4, 4, 1): ((4, 4, 2), '''
             ALTER TABLE [BingWallpaperRecords]
             ADD COLUMN Market TEXT(64) DEFAULT "";
 
@@ -87,7 +96,7 @@ class SqlDatabaseRecordManager(DownloadRecordManager):
             INSERT INTO [BingWallpaperCore]
               (MajorVer, MinorVer, Build)
               VALUES (4, 4, 2);'''),
-        }
+    }
 
     def add(self, r):
         self[r['url']] = r
@@ -97,7 +106,7 @@ class SqlDatabaseRecordManager(DownloadRecordManager):
         conn = sqlite3.connect(f)
         self.upgrade_db(conn)
         cur = conn.cursor()
-        for k,v in self.items():
+        for k, v in self.items():
             cur.execute('''
                 INSERT OR REPLACE INTO [BingWallpaperRecords]
                   (Url, DownloadTime, LocalFilePath, Description, Image, IsAccompany, Market)
@@ -115,7 +124,7 @@ class SqlDatabaseRecordManager(DownloadRecordManager):
             self.create_scheme(conn)
             return
         elif self.vercmp(ver, self.LATEST_DB_VERSION) > 0:
-            raise Exception('''Can't deal with database created by higher program version %s'''%(ver,))
+            raise Exception('''Can't deal with database created by higher program version %s''' % (ver,))
 
         _logger.info('current db version %s needs upgrade to %s', ver, self.LATEST_DB_VERSION)
         while self.vercmp(ver, self.LATEST_DB_VERSION) < 0:
@@ -126,7 +135,7 @@ class SqlDatabaseRecordManager(DownloadRecordManager):
                 cur.executescript(script)
             except Exception as err:
                 _logger.fatal('error happened during database upgrade "%s"',
-                                script, exc_info=1)
+                              script, exc_info=1)
                 conn.rollback()
                 raise err
             ver = next_ver
@@ -167,7 +176,6 @@ class SqlDatabaseRecordManager(DownloadRecordManager):
                 (ver1[0] == ver2[0] and ver1[1] == ver2[1] and ver1[2] > ver2[2]):
             return 1
         return -1
-
 
     def judge_version(self, conn):
         ver = None

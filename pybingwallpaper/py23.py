@@ -1,13 +1,14 @@
 # compatibility with py2 and py3
-from . import log
-
 import sys
 from importlib import import_module
+
+from . import log
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
 _logger = log.getChild('py23@' + ('2' if PY2 else '3'))
+
 
 def import_moved(py2name, py3name):
     if PY2:
@@ -20,6 +21,7 @@ def import_moved(py2name, py3name):
         raise RuntimeError("unknown Python version " + sys.version)
     return lib
 
+
 def get_moved_attr(py2modulename, py3modulename, attr, attr2=None, attr3=None):
     attr_moved = [attr2 is not None, attr3 is not None]
     if all(attr_moved):
@@ -30,4 +32,3 @@ def get_moved_attr(py2modulename, py3modulename, attr, attr2=None, attr3=None):
     result = getattr(import_moved(py2modulename, py3modulename), attr)
     _logger.debug('attr %r found', result)
     return result
-

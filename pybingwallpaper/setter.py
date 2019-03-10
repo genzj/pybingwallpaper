@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
+import glob
+import os.path
+import sys
+from importlib import import_module
+
 from . import log
 from .py23 import import_moved
-import sys
-
-import os.path
-import glob
-from importlib import import_module
 
 subprocess = import_moved('subprocess32', 'subprocess')
 
@@ -17,17 +17,19 @@ class WallpaperSetter:
     def set(self, path, args):
         raise NotImplementedError()
 
+
 class ShellWallpaperSetter(WallpaperSetter):
     TIMEOUT_SEC = 5
+
     def _cmd(self, path, args):
         raise NotImplementedError()
 
     def _cb(self, status, out, err, ex):
         self._logger.debug('cmd exit code: %s, OUT:\n%s\nERR:\n%s',
-                    str(status), repr(out), repr(err))
+                           str(status), repr(out), repr(err))
         if ex:
             self._logger.exception(ex)
-        return status == 0 and not ex
+        return status is not None and status == 0 and not ex
 
     def set(self, path, args):
         p = None
@@ -35,8 +37,8 @@ class ShellWallpaperSetter(WallpaperSetter):
         try:
             self._logger.debug('about to execute %s', cmd)
             p = subprocess.Popen(cmd,
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            out, err = p.communicate(timeout = self.TIMEOUT_SEC)
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out, err = p.communicate(timeout=self.TIMEOUT_SEC)
         except Exception as ex:
             if p:
                 p.kill()
@@ -46,17 +48,20 @@ class ShellWallpaperSetter(WallpaperSetter):
         else:
             return self._cb(p.poll(), out, err, None)
 
+
 class Gnome2Setter(ShellWallpaperSetter):
     def _cmd(self, path, args):
         return ["gconftool-2", "--type=string",
                 "--set", "/desktop/gnome/background/picture_filename",
                 '"{}"'.format(path)]
 
+
 class Gnome3Setter(ShellWallpaperSetter):
     def _cmd(self, path, args):
         return ["gsettings", "set",
                 "org.gnome.desktop.background", "picture-uri",
                 '"file://{}"'.format(path)]
+
 
 class WallpaperSetterFactory:
     def __init__(self, name):
@@ -65,27 +70,29 @@ class WallpaperSetterFactory:
 
     def register(self, name, c):
         if name in self.registered \
-            and c is not self.registered[name]:
+                and c is not self.registered[name]:
             raise NameError(
-                    '{} has been registered by {}'.format(name, self.registered[name]))
+                '{} has been registered by {}'.format(name, self.registered[name]))
         self.registered[name] = c
 
     def get(self, name):
         if name not in self.registered:
             raise NameError(
-                    'unregistered setter {}'.format(name))
+                'unregistered setter {}'.format(name))
         return self.registered[name]
+
 
 def load_ext_setters(path):
     logger = log.getChild('load_ext_setters')
     for i in glob.iglob(os.path.join(path, '*setter.py')):
-        if os.path.basename(i) == 'setter.py': continue
+        if os.path.basename(i) == 'setter.py':
+            continue
         logger.debug('"%s" seems like a setter', i)
         name, ext = os.path.splitext(os.path.basename(i))
         try:
             logger.debug('loading %s', name)
             import_module(name)
-        except:
+        except Exception:
             logger.warning('cannot loading setter %s', name, exc_info=1)
 
 

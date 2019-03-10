@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-from sys import exit as sysexit
+from sys import exit as sys_exit
+
 from pybingwallpaper.main import main
 
 if __name__ == '__main__':
-    sysexit(main())
+    sys_exit(main())
