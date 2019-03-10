@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import ssl
+
 from . import log
 from .py23 import get_moved_attr, import_moved
 from .ntlmauth import HTTPNtlmAuthHandler
@@ -49,7 +51,7 @@ def loadurl(url, headers={}, optional=False):
         headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1521.3 Safari/537.36'
     try:
         req = Request(url=url, headers=headers)
-        con = urlopen(req)
+        con = urlopen(req, context=ssl.create_default_context())
     except Exception as err:
         if not optional:
             _logger.error('error %s occurs during load %s with header %s', err, url, headers)
