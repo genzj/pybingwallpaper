@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
+from datetime import datetime
 from sys import argv, exit as sysexit, platform
 import os
 import errno
 from os.path import expanduser, join as pathjoin, isfile, isdir, splitext
 from os.path import basename, dirname, abspath
+
+from .webutil import urlparse, parse_qs
 from . import log
 from . import webutil
 from . import bingwallpaper
@@ -496,7 +499,14 @@ def save_a_picture(pic_url, info, outfile, optional=False):
     return picture_content
 
 def get_output_filename(run_config, link):
-    filename = basename(link)
+    link = urlparse(link)
+    filename = basename(link.path)
+    if filename == 'th':
+        # 2019-03 new url style encoding filename in url parameters
+        filename = parse_qs(link.query).get(
+            'id',
+            [datetime.now().strftime('bingwallpaper_%Y-%m-%d_%H%M%S.jpg'),]
+        )[0]
     if not run_config.keep_file_name:
         filename = 'wallpaper{}'.format(splitext(filename)[1])
     return pathjoin(run_config.output_folder, filename)
