@@ -30,7 +30,7 @@
 Name ${PROGRAM_NAME}
 
 ; The file to write
-OutFile "pybingwp-1-5-3.exe"
+OutFile "pybingwp-1-5-4.exe"
 
 InstallDir $PROGRAMFILES\Genzj\${PROGRAM_NAME}
 
@@ -108,7 +108,7 @@ Section $(NAME_SecMain) SecMain
 
   ; Put file there
   !cd ./dist/BingWallpaper
-  File /x *.pyc /x __pycache__ /x tk*.dll /x tcl*.dll "*"
+  File /r /x *.pyc /x __pycache__ /x tk*.dll /x tcl*.dll "*"
   !cd ../..
   File "res\bingwallpaper.ico"
 
