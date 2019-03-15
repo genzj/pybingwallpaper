@@ -14,19 +14,11 @@ be found [here](https://github.com/genzj/pyngwallpaper)
 
 #### Windows
 
-Download installer from any of following links and install it.
+Download installer from [releases page](https://github.com/genzj/pybingwallpaper/releases) and install it.
 
 <p>**Note: Please backup the `settings.conf` under the installation path before upgrading!**</p>
 <p>**注意：建议升级前备份安装目录下的`settings.conf`文件！**</p>
 
-**Latest Release 1.5.1**
-* [from dropbox](https://www.dropbox.com/s/fqp1tik67xbxlbw/pybingwp-1-5-1.exe?dl=1) 
-* [Baidu Disk(百度盘)](http://pan.baidu.com/s/1hs6Xbuc) 
-
-    CRC32: BD22899C
-    MD5: B1E6C442641C0E575C9B202D5E00AB59
-    SHA-1: 6AFA2FFC4ABD7ED4D544C900C6180C12EDC3C5BE
-    SHA-256: E0CB92212A419D58A73EB92CCB588E29F749E094E1207347F25720829B49162E
 
 A shortcut will be created in your startup folder. You can edit the configuration to adjust features.
 
@@ -43,24 +35,6 @@ then *add* a startup program with:
 
 You can also append arguments in *Command* box.
 
-----------
-
-### Donation
-
-If you like this tool, consider buying a cup of coffee for nocturnal coders.
-**This tool is totally free.  Donation will NOT add any additonal features.**
-
-Donate with PayPal USD
-
-[![PayPal - The safer, easier way to pay online!](https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=53RDZJBEJMD6W&lc=C2&item_name=Donate%20genzj%20for%20pybingwallpaper&button_subtype=services&currency_code=USD&bn=PP%2dBuyNowBF%3abtn_buynowCC_LG%2egif%3aNonHosted)
-
-Donate with PayPal EUR
-
-[![PayPal - The safer, easier way to pay online!](https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=53RDZJBEJMD6W&lc=US&item_name=Donate%20genzj%20for%20pybingwallpaper&button_subtype=services&currency_code=EUR&bn=PP%2dBuyNowBF%3abtn_paynowCC_LG%2egif%3aNonHosted)
-
-如果喜欢本软件，请考虑给我们昼伏夜出的码农捐助一杯咖啡吧！**软件及其所有功能均为免费且无广告，捐助与否不影响使用。**
-
-[![使用支付宝付款](https://img.alipay.com/sys/personalprod/style/mc/btn-index.png)](http://me.alipay.com/genzj)
 
 ----------
 
@@ -204,6 +178,10 @@ Donate with PayPal EUR
 ----------
 
 ### Release Note
+
+* **2019-03-15 1.5.4**
+    * Compatible with Bing's new URL format
+
 * **2016-04-06 1.5.1**
     * Minor bug fix for Python 3.5 (#43)
     * Obsolete 1.5.0 due to MS Windows Defender raise (false) alarm on the
