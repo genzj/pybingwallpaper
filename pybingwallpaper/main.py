@@ -523,7 +523,7 @@ def collect_assets(wplinks, metadata, run_config, records):
             'downloading assets of "%s" from %s to %s',
             copyright_, link, output_folder
         )
-        filename = path_join(output_folder, basename(link))
+        filename = get_output_filename(run_config, link)
         raw = save_a_picture(link, copyright_, filename, optional=True)
         if not raw:
             continue
