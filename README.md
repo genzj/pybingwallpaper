@@ -179,6 +179,9 @@ You can also append arguments in *Command* box.
 
 ### Release Note
 
+* **2019-04-30 1.5.5**
+    * Compatible with Bing's new URL format (accompany pictures this time, #55 #56)
+    
 * **2019-03-15 1.5.4**
     * Compatible with Bing's new URL format
 
