@@ -2,6 +2,8 @@
 import json
 import re
 
+from datetime import datetime
+
 from . import log
 from . import webutil
 
@@ -214,11 +216,14 @@ class BingWallpaperPage:
     def _get_metadata(self, i):
         metadata = dict()
         meta_field = [
-            'copyright', 'startdate', 'copyrightlink', 'hsh'
+            'copyright', 'copyrightlink', 'hsh'
         ]
         for f in meta_field:
             metadata[f] = i.get(f, None)
         metadata['market'] = self.act_market
+        metadata['startdate'] = datetime.strptime(i['startdate'], '%Y%m%d').date()
+        metadata['enddate'] = datetime.strptime(i['enddate'], '%Y%m%d').date()
+        metadata['fullstartdate'] = datetime.strptime(i['fullstartdate'], '%Y%m%d%H%M')
 
         return metadata
 

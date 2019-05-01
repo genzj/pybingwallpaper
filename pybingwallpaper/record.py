@@ -19,7 +19,7 @@ _logger = log.getChild('record')
 class DownloadRecord(UserDict):
     def __init__(
             self, url, local_file, description,
-            download_time=None, raw=None, is_accompany=False, market=''
+            download_time=None, start_time=None, end_time=None, raw=None, is_accompany=False, market=''
     ):
         UserDict.__init__(self)
         if download_time is None:
@@ -30,6 +30,8 @@ class DownloadRecord(UserDict):
         self['local_file'] = local_file
         self['description'] = description
         self['time'] = timestr
+        self['start_time'] = start_time.isoformat() if start_time else None
+        self['end_time'] = end_time.isoformat() if end_time else None
         self['raw'] = raw
         self['is_accompany'] = is_accompany
         self['market'] = market
@@ -81,7 +83,7 @@ default_manager = DownloadRecordManager('default')
 
 
 class SqlDatabaseRecordManager(DownloadRecordManager):
-    LATEST_DB_VERSION = (4, 4, 2)
+    LATEST_DB_VERSION = (5, 6, 1)
     DB_UPGRADE_SCRIPTS = {
         # from_ver:  (to_ver, sql)
         (4, 4, 1): ((4, 4, 2), '''
@@ -96,6 +98,17 @@ class SqlDatabaseRecordManager(DownloadRecordManager):
             INSERT INTO [BingWallpaperCore]
               (MajorVer, MinorVer, Build)
               VALUES (4, 4, 2);'''),
+
+        (4, 4, 2): ((5, 6, 1), '''
+            ALTER TABLE [BingWallpaperRecords]
+            ADD COLUMN StartTime DATETIME DEFAULT NULL;
+            ALTER TABLE [BingWallpaperRecords]
+            ADD COLUMN EndTime DATETIME DEFAULT NULL;
+
+            UPDATE [BingWallpaperCore]
+              SET (MajorVer, MinorVer, Build) = (5, 6, 1)
+              WHERE MajorVer=4 AND MinorVer=4 AND Build=2;
+        ''')
     }
 
     def add(self, r):
@@ -109,9 +122,12 @@ class SqlDatabaseRecordManager(DownloadRecordManager):
         for k, v in self.items():
             cur.execute('''
                 INSERT OR REPLACE INTO [BingWallpaperRecords]
-                  (Url, DownloadTime, LocalFilePath, Description, Image, IsAccompany, Market)
-                  VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (k, v['time'], v['local_file'], v['description'], v['raw'], v['is_accompany'], v['market']))
+                  (Url, DownloadTime, StartTime, EndTime, LocalFilePath, Description, Image, IsAccompany, Market)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                k, v['time'], v['start_time'], v['end_time'], v['local_file'], v['description'], v['raw'],
+                v['is_accompany'], v['market']
+            ))
         conn.commit()
 
     def load(self, f):
@@ -147,6 +163,8 @@ class SqlDatabaseRecordManager(DownloadRecordManager):
             CREATE TABLE [BingWallpaperRecords] (
               [Url] CHAR(1024) NOT NULL ON CONFLICT FAIL,
               [DownloadTime] DATETIME NOT NULL ON CONFLICT FAIL,
+              [StartTime] DATETIME,
+              [EndTime] DATETIME,
               [LocalFilePath] CHAR(1024),
               [Description] TEXT(1024),
               [Market] TEXT(64) DEFAULT "",

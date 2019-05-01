@@ -504,7 +504,9 @@ def download_wallpaper(run_config):
         r = record.DownloadRecord(
             mainlink, outfile, copyright_,
             raw=None if run_config.database_no_image else raw,
-            market=metadata['market']
+            market=metadata['market'],
+            start_time=metadata['fullstartdate'],
+            end_time=metadata['enddate'],
         )
         records.append(r)
         collect_assets(wplinks[1:], metadata, run_config, records)
