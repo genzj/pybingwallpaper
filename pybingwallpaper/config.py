@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import codecs
 import io
 import sys
 from argparse import Namespace
@@ -360,12 +361,12 @@ def pretty(config, sep='\n'):
 
 def to_file(db, config, filename, dumper=None):
     dumper = ConfigFileDumper() if not dumper else dumper
-    with open(filename, 'w', encoding='utf-8') as outf:
+    with codecs.open(filename, 'w', encoding='utf-8') as outf:
         dumper.dump(db, config, outf)
         outf.flush()
 
 
 def from_file(db, filename, loader=None):
     loader = ConfigFileLoader() if not loader else loader
-    with open(filename, 'r', encoding='utf-8') as inf:
+    with codecs.open(filename, 'r', encoding='utf-8') as inf:
         return loader.load(db, inf)
