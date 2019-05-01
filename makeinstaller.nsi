@@ -30,7 +30,7 @@
 Name ${PROGRAM_NAME}
 
 ; The file to write
-OutFile "pybingwp-1-5-5.exe"
+OutFile "pybingwp-1-5-6.exe"
 
 InstallDir $PROGRAMFILES\Genzj\${PROGRAM_NAME}
 
@@ -58,7 +58,7 @@ LicenseData $(license)
 
 ;--------------------------------
 ;Variables
-Var COUNTRY_CODE
+Var MARKET_CODE
 Var COUNTRY_CHOSEN
 Var STARTUP_MODE
 
@@ -124,41 +124,44 @@ Section $(NAME_SecMain) SecMain
 SectionEnd
 
 SectionGroup $(NAME_SecGrCountry) SecGrCountry
+  Section "Auto" country_auto
+    StrCpy $MARKET_CODE ""
+  SectionEnd
   Section /o "Australia" country_au
-    StrCpy $COUNTRY_CODE "au"
+    StrCpy $MARKET_CODE "en-AU"
   SectionEnd
   Section /o "Brazil" country_br
-    StrCpy $COUNTRY_CODE "br"
+    StrCpy $MARKET_CODE "pt-BR"
   SectionEnd
   Section /o "Canada" country_ca
-    StrCpy $COUNTRY_CODE "ca"
+    StrCpy $MARKET_CODE "en-CA"
   SectionEnd
   Section /o "China (HD)" country_cn
-    StrCpy $COUNTRY_CODE "cn"
+    StrCpy $MARKET_CODE "zh-CN"
   SectionEnd
   Section /o "Germany" country_de
-    StrCpy $COUNTRY_CODE "de"
+    StrCpy $MARKET_CODE "de-DE"
   SectionEnd
   Section /o "France" country_fr
-    StrCpy $COUNTRY_CODE "fr"
+    StrCpy $MARKET_CODE "fr-FR"
   SectionEnd
   Section /o "Japan" country_jp
-    StrCpy $COUNTRY_CODE "jp"
+    StrCpy $MARKET_CODE "ja-JP"
   SectionEnd
   Section /o "New Zealand (HD)" country_nz
-    StrCpy $COUNTRY_CODE "nz"
+    StrCpy $MARKET_CODE "en-NZ"
   SectionEnd
-  Section "USA (HD)" country_us
-    StrCpy $COUNTRY_CODE "us"
+  Section /o "USA (HD)" country_us
+    StrCpy $MARKET_CODE "en-US"
   SectionEnd
   Section /o "United Kingdom" country_uk
-    StrCpy $COUNTRY_CODE "uk"
+    StrCpy $MARKET_CODE "en-GB"
   SectionEnd
 SectionGroupEnd
 
 Section "-generate configuration file"
   IfFileExists "$INSTDIR\settings.conf" +2 0
-    ExecWait '"$INSTDIR\BingWallpaper.exe" -c $COUNTRY_CODE --generate-config'
+    ExecWait '"$INSTDIR\BingWallpaper.exe" --country auto --market "$MARKET_CODE" --generate-config'
 SectionEnd
 
 Section $(NAME_SecStartMenu) SecStartMenu
@@ -214,12 +217,12 @@ SectionEnd
   LangString DESC_SecMain ${LANG_ENGLISH} "Main program files of ${PROGRAM_NAME}."
   LangString DESC_SecStartMenu ${LANG_ENGLISH} "Create Start Menu shortcuts for ${PROGRAM_NAME}"
   LangString DESC_SecStartup ${LANG_ENGLISH} "Auto run ${PROGRAM_NAME} at Windows startup (network connection at startup is required)"
-  LangString DESC_SecStartupOnce ${LANG_ENGLISH} "Exit after downloading during startup (disables auto updating). Relies Auto Run."
+  LangString DESC_SecStartupOnce ${LANG_ENGLISH} "Exit after downloading wallpaper (i.e. disables auto updating)."
   LangString DESC_SecRunit ${LANG_ENGLISH} "Run ${PROGRAM_NAME} and change wallpaper immediately after installation"
-  LangString DESC_SecGrCountry ${LANG_ENGLISH} "Bing.com wallpaper may vary from countries. Those countries marked (HD) support high resolution wallpapers(1920x1200)"
+  LangString DESC_SecGrCountry ${LANG_ENGLISH} "wallpaper may vary in different countries. Countries marked (HD) support high resolution wallpapers(1920x1200)"
 
   LangString ASK_FOR_CONFIG_DEL1 ${LANG_ENGLISH} "Do you want to remove all files in installation path?"
-  LangString ASK_FOR_CONFIG_DEL2 ${LANG_ENGLISH} "Removed files (including configuration, wallpapers if you put them under installation path) can't be restored, are you sure you want to remove them?"
+  LangString ASK_FOR_CONFIG_DEL2 ${LANG_ENGLISH} "Removed files (including configuration and wallpapers if you put them under installation path) can't be restored, are you sure you want to remove them?"
 
 
 
@@ -350,8 +353,8 @@ done:
 FunctionEnd
 
 Function .onInit
-  StrCpy $COUNTRY_CODE "us"
-  StrCpy $COUNTRY_CHOSEN ${country_us}
+  StrCpy $MARKET_CODE ""
+  StrCpy $COUNTRY_CHOSEN ${country_auto}
   StrCpy $STARTUP_MODE ""
 
   ; issue #31: for win7 and above, program files folder is access-limited so
@@ -372,6 +375,7 @@ FunctionEnd
 Function .onSelChange
 
   !insertmacro StartRadioButtons $COUNTRY_CHOSEN
+    !insertmacro RadioButton ${country_auto}
     !insertmacro RadioButton ${country_au}
     !insertmacro RadioButton ${country_br}
     !insertmacro RadioButton ${country_ca}

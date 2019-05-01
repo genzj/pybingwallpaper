@@ -120,9 +120,9 @@ def prepare_config_db():
     params.append(config.ConfigParameter(
         'country', defaults='auto',
         choices=('au', 'br', 'ca', 'cn', 'de', 'fr', 'jp', 'nz', 'us', 'uk', 'auto'),
-        help='''select country code sent to bing.com.
-            bing.com in different countries may show different
-            backgrounds.
+        help='''
+            (Obsolete, use --market instead)
+            select country code used to access bing.com API.
             au: Australia  br: Brazil  ca: Canada  cn: China  de:Germany
             fr: France  jp: Japan  nz: New Zealand  us: USA  uk: United Kingdom
             auto: select country according to your IP address (by Bing.com)
@@ -136,17 +136,25 @@ def prepare_config_db():
     ))
     params.append(config.ConfigParameter(
         'market', defaults='',
-        help='''specify market from which the wallpaper should be downloaded.
-            Market is a more generic way to specify language-country of bing.com.
-            The list of markets may grow sometimes, and different language of the
-            same country may have different image, so consider using it instead of
-            country. Market code should be specified in format 'xy-ab' such as en-us.
+        help='''specify region from which the wallpaper should be downloaded.
+            Market code should be specified in format 'xy-ab' such as en-us.
+            Use '--list-markets' to view all available markets.
             Note: specify this parameter will override any settings to --country.
             ''',
         loader_opts={'cli': {
             'flags': ('--market',),
         }, 'conffile': {
             'section': 'Download',
+        }}
+    ))
+    params.append(config.ConfigParameter(
+        'list_markets',
+        defaults=False,
+        help='''list all available values for the --market option and exit''',
+        loader_srcs=['cli', 'defload'],
+        loader_opts={'cli': {
+            'flags': ('--list-markets',),
+            'action': 'store_true'
         }}
     ))
     params.append(config.ConfigParameter(
@@ -700,6 +708,9 @@ def load_config(config_db, args=None):
     _logger.debug('cli arg parsed:\n\t%s', config.pretty(cli_config, '\n\t'))
     run_config = config.merge_config(default_config, cli_config)
 
+    if run_config.list_markets:
+        list_markets()
+
     if run_config.generate_config:
         generate_config_file(config_db, run_config)
 
@@ -792,6 +803,60 @@ def get_app_path(app_file=None):
     app_path = abspath(os.curdir)
     os.chdir(old_path)
     return os.path.normcase(app_path)
+
+
+def list_markets():
+    # extracted from Bing Account settings page
+    markets = (
+        ("es-AR", "Argentina",),
+        ("en-AU", "Australia",),
+        ("de-AT", "Austria",),
+        ("nl-BE", "Belgium - Dutch",),
+        ("fr-BE", "Belgium - French",),
+        ("pt-BR", "Brazil",),
+        ("en-CA", "Canada - English",),
+        ("fr-CA", "Canada - French",),
+        ("es-CL", "Chile",),
+        ("zh-CN", "China",),
+        ("da-DK", "Denmark",),
+        ("ar-EG", "Egypt",),
+        ("fi-FI", "Finland",),
+        ("fr-FR", "France",),
+        ("de-DE", "Germany",),
+        ("zh-HK", "Hong Kong SAR",),
+        ("en-IN", "India",),
+        ("en-ID", "Indonesia",),
+        ("en-IE", "Ireland",),
+        ("it-IT", "Italy",),
+        ("ja-JP", "Japan",),
+        ("ko-KR", "Korea",),
+        ("en-MY", "Malaysia",),
+        ("es-MX", "Mexico",),
+        ("nl-NL", "Netherlands",),
+        ("en-NZ", "New Zealand",),
+        ("nb-NO", "Norway",),
+        ("en-PH", "Philippines",),
+        ("pl-PL", "Poland",),
+        ("pt-PT", "Portugal",),
+        ("ru-RU", "Russia",),
+        ("ar-SA", "Saudi Arabia",),
+        ("en-SG", "Singapore",),
+        ("en-ZA", "South Africa",),
+        ("es-ES", "Spain",),
+        ("sv-SE", "Sweden",),
+        ("fr-CH", "Switzerland - French",),
+        ("de-CH", "Switzerland - German",),
+        ("zh-TW", "Taiwan",),
+        ("tr-TR", "Turkey",),
+        ("ar-AE", "United Arab Emirates",),
+        ("en-GB", "United Kingdom",),
+        ("en-US", "United States - English",),
+        ("es-US", "United States - Spanish",),
+    )
+    print('Available markets:')
+    for k, v in markets:
+        print(k, '    ', v)
+    sys_exit(0)
 
 
 def main():

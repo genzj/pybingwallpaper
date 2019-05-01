@@ -31,8 +31,9 @@ def setup_proxy(proxy_protocols, proxy_url, proxy_port, sites, username="", pass
     pdah = url_request.ProxyDigestAuthHandler(passman)
 
     cp = url_request.HTTPCookieProcessor()
+    context = ssl.create_default_context()
     opener = url_request.build_opener(cp,
-                                      url_request.HTTPSHandler(debuglevel=1),
+                                      url_request.HTTPSHandler(debuglevel=1, context=context),
                                       url_request.HTTPHandler(debuglevel=99),
                                       ph, pnah, pbah, pdah,
                                       url_request.HTTPErrorProcessor())
@@ -56,7 +57,7 @@ def loadurl(url, headers=None, optional=False):
         ] = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1521.3 Safari/537.36'
     try:
         req = Request(url=url, headers=headers)
-        con = urlopen(req, context=ssl.create_default_context())
+        con = urlopen(req)
     except Exception as err:
         if not optional:
             _logger.error('error %s occurs during load %s with header %s', err, url, headers)
@@ -99,4 +100,3 @@ def postto(url, datadict, headers=None, decodec='gbk'):
     except Exception as err:
         _logger.error('error %s occurs during post %s to %s', err, params, url)
         _logger.debug('', exc_info=1)
-
