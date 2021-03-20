@@ -64,3 +64,5 @@ settings.conf
 venv/
 
 .idea/
+.vscode/
+.mypy_cache/

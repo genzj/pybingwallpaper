@@ -31,15 +31,26 @@ class HighResolutionSetting:
         return HighResolutionSetting.settings[name]
 
 
+class UHDResolution(HighResolutionSetting):
+    def get_pic_url(self, rooturl, imgurlbase, fallbackurl, has_wp, resolution):
+        wplink = webutil.urljoin(rooturl, '_'.join([imgurlbase, 'UHD.jpg']))
+        _logger.debug('in UHD mode, get url %s', wplink)
+        return wplink,
+
+
 class PreferHighResolution(HighResolutionSetting):
     def get_pic_url(self, rooturl, imgurlbase, fallbackurl, has_wp, resolution):
-        if has_wp:
-            wplink = webutil.urljoin(rooturl, '_'.join([imgurlbase, '1920x1200.jpg']))
-            _logger.debug('in prefer mode, get high resolution url %s', wplink)
-        else:
-            wplink = webutil.urljoin(rooturl, fallbackurl)
-            _logger.debug('in prefer mode, get normal resolution url %s', wplink)
-        return wplink,
+        resolutions = ['UHD', '1920x1200', '1920x1080', ]
+        candidates = [
+            webutil.urljoin(rooturl, '_'.join([imgurlbase, suffix + '.jpg']))
+            for suffix in resolutions
+        ]
+        for url in candidates:
+            _logger.debug('in prefer mode, detect existence of pic %s', url)
+            if webutil.test_header(url):
+                _logger.debug('in prefer mode, decided url: %s', url)
+                return url,
+        return webutil.urljoin(rooturl, fallbackurl),
 
 
 class InsistHighResolution(HighResolutionSetting):
@@ -81,10 +92,11 @@ class ManualHighResolution(HighResolutionSetting):
         return wplink,
 
 
+HighResolutionSetting.settings['uhd'] = UHDResolution
 HighResolutionSetting.settings['prefer'] = PreferHighResolution
 HighResolutionSetting.settings['insist'] = InsistHighResolution
 HighResolutionSetting.settings['never'] = NeverHighResolution
-HighResolutionSetting.settings['highest'] = HighestResolution
+HighResolutionSetting.settings['highest'] = PreferHighResolution
 HighResolutionSetting.settings['manual'] = ManualHighResolution
 
 

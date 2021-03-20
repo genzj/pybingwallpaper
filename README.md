@@ -1,6 +1,6 @@
 # PyBingWallpaper
 
-### What pybingwallpaper does
+## What pybingwallpaper does
 
 Download the wallpaper offered by [*Bing.com*](www.bing.com) and set it 
 current wallpaper background.
@@ -10,19 +10,19 @@ be found [here](https://github.com/genzj/pyngwallpaper)
 
 ----------
 
-### Auto startup
+## Auto startup
 
-#### Windows
+### Windows
 
 Download installer from [releases page](https://github.com/genzj/pybingwallpaper/releases) and install it.
 
 <p>**Note: Please backup the `settings.conf` under the installation path before upgrading!**</p>
 <p>**注意：建议升级前备份安装目录下的`settings.conf`文件！**</p>
 
-
 A shortcut will be created in your startup folder. You can edit the configuration to adjust features.
 
-#### Linux with Gnome
+### Linux with Gnome
+
 You just need to add a startup application:
 
     gnome-session-properties
@@ -35,10 +35,10 @@ then *add* a startup program with:
 
 You can also append arguments in *Command* box.
 
-
 ----------
 
-### Usage
+## Usage
+
     usage: pybingwallpaper [-h] [-v] [--config-file CONFIG_FILE]
                            [--generate-config] [-b] [--foreground]
                            [-c {au,br,ca,cn,de,fr,jp,nz,us,uk,auto}]
@@ -99,23 +99,22 @@ You can also append arguments in *Command* box.
       -k, --keep-file-name  keep the original filename. By default downloaded file
                             will be renamed as 'wallpaper.jpg'. Keep file name
                             will retain all downloaded photos
-      -m {prefer,collect,highest,insist,manual,never}, --size-mode {prefer,collect,h
-    ighest,insist,manual,never}
+      -m {prefer,collect,highest,insist,manual,never,uhd}, --size-mode {prefer,collect,highest,insist,manual,never,uhd}
                             set selecting strategy when wallpapers in different
-                            size are available (normally 1920x1200 and 1366x768).
-                            `prefer` (default) uses high resolution if it's
-                            available, otherwise downloads normal resolution;
-                            `insist` always use high resolution and ignore other
-                            pictures (Note: some countries have only normal size
-                            wallpapers, if `insist` is adopted with those sites,
-                            no wallpaper can be downloaded, see `--country` for
-                            more); `highest` use the highest available resolution,
-                            that is, 1920x1200 for HD sites, 1920x1080 for others;
-                            `never` always use normal resolution; `manual` use
-                            resolution specified in `--image-size` `collect` is
-                            obsolete and only kept for backward compatibility,
-                            equals highest mode together with --collect=accompany
-                            option.
+                            size are available (4K, 1920x1200, 1920x1080 and
+                            1366x768). `prefer` (default) detect and download the
+                            highest available resolution; `insist` always use
+                            1920x1200 resolution and ignore other pictures (Note:
+                            some countries have only normal size wallpapers, if
+                            `insist` is adopted with those sites, no wallpaper can
+                            be downloaded, see `--country` for more); `highest` is
+                            an alias of `prefer` `never` always use normal
+                            resolution (1366x768); `manual` use resolution
+                            specified in `--image-size` `collect` is obsolete and
+                            only kept for backward compatibility, equals `prefer`
+                            mode together with --collect=accompany option. `uhd`
+                            insists using 4K resolution, or abort wallpaper
+                            downloading if it's not available.
       --collect COLLECT     items to be collected besides main wallpaper, can be
                             assigned more than once in CLI or as comma separated
                             list from config file. currently `accompany`, `video`
@@ -177,63 +176,67 @@ You can also append arguments in *Command* box.
                             custom server address.
 ----------
 
-### Release Note
+## Release Note
+
+* **2021-03-19 1.6.0**
+  * Support UHD resolution (#63)
+  * `highest` mode is an alias of `prefer` now.
 
 * **2019-04-30 1.5.5**
-    * Compatible with Bing's new URL format (accompany pictures this time, #55 #56)
-    
+  * Compatible with Bing's new URL format (accompany pictures this time, #55 #56)
+
 * **2019-03-15 1.5.4**
-    * Compatible with Bing's new URL format
+  * Compatible with Bing's new URL format
 
 * **2016-04-06 1.5.1**
-    * Minor bug fix for Python 3.5 (#43)
-    * Obsolete 1.5.0 due to MS Windows Defender raise (false) alarm on the
-      installer (#44)
+  * Minor bug fix for Python 3.5 (#43)
+  * Obsolete 1.5.0 due to MS Windows Defender raise (false) alarm on the
+    installer (#44)
 
 * **2015-12-08 1.5.0**
-    * Can collect video now! (#34)
-    * Decouple collect mode from market setting (#35)
-    * Better compatibility with win 8 and higher (#31 and #40)
-    * Avoid deleting collected wallpaper at uninstallation (#33)
+  * Can collect video now! (#34)
+  * Decouple collect mode from market setting (#35)
+  * Better compatibility with win 8 and higher (#31 and #40)
+  * Avoid deleting collected wallpaper at uninstallation (#33)
 
 * **2014-09-08 1.4.4**
-    * Support configurable bing server address (#27)
+  * Support configurable bing server address (#27)
 
 * **2014-04-18 1.4.4b01**
-    * Support download records database (#18), you can build you own bing album now. 
+  * Support download records database (#18), you can build you own bing album now. 
 
 * **2013-12-24 1.4.3**
-    * Fix #13 enhance robustness of network connection status: retry in
-      60 seconds after network failure 
-    * Fix #14 download image with Chinese logo whenever a 1920x1200 picture is
-      downloaded: add a collect mode, read 
-      [use collect mode](https://github.com/genzj/pybingwallpaper/wiki/Use-collect-mode) 
-      [使用收集模式](https://github.com/genzj/pybingwallpaper/wiki/%E4%BD%BF%E7%94%A8%E6%94%B6%E9%9B%86%E6%A8%A1%E5%BC%8F)
-      for more
-    * Fix #15 use n=1 instead of n=10 for more backtracking room: change
-      default n to 1
-    * Fix #16 can't read settings.conf when run out of installation dir: read
-      settings.conf from the same path of main.py by default
+  * Fix #13 enhance robustness of network connection status: retry in
+    60 seconds after network failure 
+  * Fix #14 download image with Chinese logo whenever a 1920x1200 picture is
+    downloaded: add a collect mode, read 
+    [use collect mode](https://github.com/genzj/pybingwallpaper/wiki/Use-collect-mode) 
+    [使用收集模式](https://github.com/genzj/pybingwallpaper/wiki/%E4%BD%BF%E7%94%A8%E6%94%B6%E9%9B%86%E6%A8%A1%E5%BC%8F)
+    for more
+  * Fix #15 use n=1 instead of n=10 for more backtracking room: change
+    default n to 1
+  * Fix #16 can't read settings.conf when run out of installation dir: read
+    settings.conf from the same path of main.py by default
 
 * **2013-12-24 1.4.2**
-    * Support http/https proxy.
+  * Support http/https proxy.
     Read
     [配置指南](https://github.com/genzj/pybingwallpaper/wiki/%E5%A6%82%E4%BD%95%E9%85%8D%E7%BD%AE%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F) 
     [Proxy guidance](https://github.com/genzj/pybingwallpaper/wiki/How-to-use-pybingwallpaper-with-proxy) 
     for details.
 
 * **2013-12-21 1.4.1**
-    * Background mode bugfix
+  * Background mode bugfix
 
 * **2013-12-21 1.4.0**
-    * Use configuration file;
-    * Support specify market
-    * Support manually set picture resolution
-    * Support downloading 1920x1080 images for pages without wallpaper link
+  * Use configuration file;
+  * Support specify market
+  * Support manually set picture resolution
+  * Support downloading 1920x1080 images for pages without wallpaper link
 
 * **2013-09-24 1.3.0**
-    * supports high resolution wallpapers
-    * change default checking interval to 2 hours
-    * obsolete option `-f` and `--persistence`
-    * fix none type error when offset exceeds boundary issue #2
-    * fix none type error when download picture fails issue #3
+  * supports high resolution wallpapers
+  * change default checking interval to 2 hours
+  * obsolete option `-f` and `--persistence`
+  * fix none type error when offset exceeds boundary issue #2
+  * fix none type error when download picture fails issue #3

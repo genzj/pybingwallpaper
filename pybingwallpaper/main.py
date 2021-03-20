@@ -203,23 +203,25 @@ def prepare_config_db():
 
     params.append(config.ConfigParameter(
         'size_mode', defaults='prefer',
-        choices=('prefer', 'collect', 'highest', 'insist', 'manual', 'never'),
+        choices=('prefer', 'collect', 'highest', 'insist', 'manual', 'never', 'uhd'),
         help='''set selecting strategy when wallpapers in different
-                    size are available (normally 1920x1200 and 1366x768).
-                    `prefer` (default) uses high resolution if it's
-                    available, otherwise downloads normal resolution;
-                    `insist` always use high resolution and ignore
+                    size are available (4K, 1920x1200, 1920x1080 and 1366x768).
+                    `prefer` (default) detect and download the highest
+                    available resolution;
+                    `insist` always use 1920x1200 resolution and ignore
                     other pictures (Note: some countries have only
                     normal size wallpapers, if `insist` is adopted
                     with those sites, no wallpaper can be downloaded,
                     see `--country` for more);
-                    `highest` use the highest available resolution, that
-                    is, 1920x1200 for HD sites, 1920x1080 for others;
-                    `never` always use normal resolution;
+                    `highest` is an alias of `prefer`
+                    `never` always use normal resolution (1366x768);
                     `manual` use resolution specified in `--image-size`
                     `collect` is obsolete and only kept for backward
-                    compatibility, equals highest mode together with
-                    --collect=accompany option.''',
+                    compatibility, equals `prefer` mode together with
+                    --collect=accompany option.
+                    `uhd` insists using 4K resolution, or abort wallpaper
+                    downloading if it's not available.
+                    ''',
         loader_opts={'cli': {
             'flags': ('-m', '--size-mode'),
         }, 'conffile': {

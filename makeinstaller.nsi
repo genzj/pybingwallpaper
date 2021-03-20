@@ -30,7 +30,7 @@
 Name ${PROGRAM_NAME}
 
 ; The file to write
-OutFile "pybingwp-1-5-6.exe"
+OutFile "pybingwp-1-6-0.exe"
 
 InstallDir $PROGRAMFILES\Genzj\${PROGRAM_NAME}
 
@@ -238,7 +238,7 @@ SectionEnd
   LangString DESC_SecStartup ${LANG_SimpChinese} "启动Windows时自动运行${PROGRAM_NAME}（启动时需要访问网络）"
   LangString DESC_SecStartupOnce ${LANG_SimpChinese} "自动运行后退出程序，不驻留内存（依赖自动启动，选中此项将关闭定时更换功能）"
   LangString DESC_SecRunit ${LANG_SimpChinese} "安装完成后启动${PROGRAM_NAME}（需要访问网络）"
-  LangString DESC_SecGrCountry ${LANG_SimpChinese} "不同国家访问Bing.com时桌面可能会不同。标有HD的分站支持高分辨率桌面(1920x1200)"
+  LangString DESC_SecGrCountry ${LANG_SimpChinese} "不同国家访问Bing.com时桌面可能会不同。标有HD的分站支持高分辨率桌面(4K/1920x1200)"
 
   LangString ASK_FOR_CONFIG_DEL1 ${LANG_SimpChinese} "是否删除安装目录下的所有文件？"
   LangString ASK_FOR_CONFIG_DEL2 ${LANG_SimpChinese} "安装目录下的所有文件（包括配置文件和其他用户创建文件）删除后不可恢复！确认删除？"

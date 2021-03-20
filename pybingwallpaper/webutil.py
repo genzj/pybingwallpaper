@@ -100,3 +100,13 @@ def postto(url, datadict, headers=None, decodec='gbk'):
     except Exception as err:
         _logger.error('error %s occurs during post %s to %s', err, params, url)
         _logger.debug('', exc_info=1)
+
+
+def test_header(url, extra_headers=None):
+    headers = {
+        'method': 'HEAD',
+    }
+    if extra_headers:
+        headers.update(extra_headers)
+    resp = loadurl(url, headers, True)
+    return resp is not None
