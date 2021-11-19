@@ -2,7 +2,7 @@
 
 ## What pybingwallpaper does
 
-Download the wallpaper offered by [*Bing.com*](www.bing.com) and set it 
+Download the wallpaper offered by [*Bing.com*](https://www.bing.com) and set it 
 current wallpaper background.
 
 Another project for the same purpose but download from National Geographic can 
